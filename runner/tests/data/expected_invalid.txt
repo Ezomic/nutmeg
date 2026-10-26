@@ -1,0 +1,5 @@
+nutmeg-run: invalid input: /seed: must be an integer from 0 to 9007199254740991
+nutmeg-run: invalid input: /home/formation: must be one of 442, 433, 352, 4231, 532, 343
+nutmeg-run: invalid input: /home/lineup: must be an array of 11 players
+nutmeg-run: invalid input: /away/lineup/2/attributes/pace: must be an integer from 1 to 100
+nutmeg-run: invalid input: /away/lineup/4/attributes/vision: is required
