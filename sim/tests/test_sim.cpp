@@ -129,3 +129,24 @@ TEST_CASE("a missing file is refused")
     REQUIRE_FALSE(InputStream::load("does/not/exist.nfis", loaded, error));
     REQUIRE_FALSE(error.empty());
 }
+
+TEST_CASE("only the controlled player moves under a human input")
+{
+    NullPlatform platform;
+    platform.init({});
+    Simulation sim(5);
+    const gameplay::World before = sim.world();
+    DriverOptions options;
+    options.maxTicks = 120;
+    options.beforeFrame = [&](std::uint64_t) {
+        InputFrame frame;
+        frame.moveY = 1.0f;
+        frame.buttons = InputFrame::Sprint;
+        platform.setInput(frame);
+    };
+    runSimulation(platform, sim, options);
+    for (std::size_t i = 0; i < gameplay::kPlayerCount; ++i) {
+        const bool moved = sim.world().players()[i].position != before.players()[i].position;
+        REQUIRE(moved == (i == Simulation::kControlledPlayer));
+    }
+}
