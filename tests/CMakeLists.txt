@@ -8,5 +8,5 @@ include(Catch)
 
 file(GLOB nutmeg_test_sources CONFIGURE_DEPENDS test_*.cpp)
 add_executable(nutmeg_tests ${nutmeg_test_sources})
-target_link_libraries(nutmeg_tests PRIVATE nutmeg_platform Catch2::Catch2WithMain)
+target_link_libraries(nutmeg_tests PRIVATE nutmeg_platform nutmeg_debugview_model Catch2::Catch2WithMain)
 catch_discover_tests(nutmeg_tests)

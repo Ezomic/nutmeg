@@ -6,6 +6,7 @@
       "generator": "Visual Studio 17 2022",
       "architecture": "x64",
       "binaryDir": "${sourceDir}/build/windows",
+      "cacheVariables": { "NUTMEG_RUNTIME": "ON" },
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
     },
     {
