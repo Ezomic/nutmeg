@@ -21,6 +21,7 @@ std::uint64_t Player::hash() const
     h = hashCombine(h, bits(velocity.y));
     h = hashCombine(h, bits(facing));
     h = hashCombine(h, bits(stamina));
+    h = hashCombine(h, mix64(static_cast<std::uint64_t>(cooldown)));
     return h;
 }
 

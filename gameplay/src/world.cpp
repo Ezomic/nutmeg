@@ -1,8 +1,11 @@
 #include "nutmeg/gameplay/world.h"
 
+#include "nutmeg/controls/intent.h"
 #include "nutmeg/core/dmath.h"
 #include "nutmeg/core/hash.h"
 #include "nutmeg/gameplay/locomotion.h"
+
+#include <algorithm>
 
 namespace nutmeg::gameplay {
 
@@ -72,6 +75,71 @@ void clampToPitch(Player& p)
     }
 }
 
+namespace tune = possession;
+
+Vec2 facingOf(const Player& p) { return {dmath::cos(p.facing), dmath::sin(p.facing)}; }
+
+Vec2 unitOr(Vec2 v, Vec2 fallback, float minLength)
+{
+    const float len = physics::length(v);
+    return len > minLength ? v * (1.0f / len) : fallback;
+}
+
+std::uint32_t assistTarget(const std::array<Player, kPlayerCount>& players, const Player& from, Vec2 direction)
+{
+    std::uint32_t best = kNoPlayer;
+    float bestScore = -1e9f;
+    for (const Player& mate : players) {
+        if (mate.side != from.side || mate.id == from.id) {
+            continue;
+        }
+        const Vec2 d = mate.position - from.position;
+        const float dist = physics::length(d);
+        if (dist < tune::kAssistMinDistance || dist > tune::kAssistMaxDistance) {
+            continue;
+        }
+        const float cosine = physics::dot(d, direction) / dist;
+        if (cosine < tune::kAssistCosine) {
+            continue;
+        }
+        const float score = cosine - dist * tune::kAssistDistanceWeight;
+        if (score > bestScore) {
+            bestScore = score;
+            best = mate.id;
+        }
+    }
+    return best;
+}
+
+ActionRequest requestFromIntent(const std::array<Player, kPlayerCount>& players, const Player& p, const controls::Intent& intent)
+{
+    const Vec2 stick{intent.move.x, intent.move.y};
+    const Vec2 direction = unitOr(stick, facingOf(p), locomotion::kFacingDeadzone);
+    ActionRequest request;
+
+    const auto passLike = [&](ActionKind kind, float power) {
+        request.kind = kind;
+        request.power = power;
+        request.target = assistTarget(players, p, direction);
+        request.aim = p.position + direction * 10.0f;
+    };
+
+    if (intent.shoot.fire) {
+        const Side defending = physics::opposite(p.side);
+        const float lateral = std::clamp(stick.y, -1.0f, 1.0f);
+        request.kind = ActionKind::Shoot;
+        request.power = intent.shoot.power;
+        request.aim = {physics::pitch::goalLineX(defending), lateral * physics::pitch::kHalfGoalWidth * tune::kShotAimFraction};
+    } else if (intent.pass.fire) {
+        passLike(ActionKind::Pass, intent.pass.power);
+    } else if (intent.through.fire) {
+        passLike(ActionKind::Through, intent.through.power);
+    } else if (intent.tackle) {
+        request.kind = ActionKind::Tackle;
+    }
+    return request;
+}
+
 std::array<schema::PlayerProfile, kPlayerCount> defaultProfiles()
 {
     std::array<schema::PlayerProfile, kPlayerCount> profiles;
@@ -84,12 +152,13 @@ std::array<schema::PlayerProfile, kPlayerCount> defaultProfiles()
 
 }
 
-World::World()
-    : World(defaultProfiles())
+World::World(std::uint64_t seed)
+    : World(defaultProfiles(), seed)
 {
 }
 
-World::World(const std::array<schema::PlayerProfile, kPlayerCount>& profiles)
+World::World(const std::array<schema::PlayerProfile, kPlayerCount>& profiles, std::uint64_t seed)
+    : rng_(Rng(seed).derive("possession"))
 {
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
@@ -105,8 +174,20 @@ World::World(const std::array<schema::PlayerProfile, kPlayerCount>& profiles)
 
 void World::step(const PlayerInputs& inputs)
 {
+    step(inputs, PlayerActions{});
+}
+
+void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
+{
+    events_.clear();
+    PlayerActions requests;
+    collectRequests(inputs, actions, requests);
+
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
+        if (p.cooldown > 0) {
+            --p.cooldown;
+        }
         const bool sprint = (inputs[i].buttons & InputFrame::Sprint) != 0;
         locomotion::step(p, intentOf(inputs[i], p.side), sprint);
     }
@@ -114,8 +195,268 @@ void World::step(const PlayerInputs& inputs)
     for (Player& p : players_) {
         clampToPitch(p);
     }
+
+    if (possessor_ != kNoPlayer) {
+        attachBall(players_[possessor_]);
+    }
+    if (!ballDead_) {
+        resolveActions(requests);
+        if (possessor_ == kNoPlayer) {
+            resolveLooseBall();
+        }
+    }
     ball_.step();
+    checkBallStatus();
     ++tick_;
+}
+
+void World::collectRequests(const PlayerInputs& inputs, const PlayerActions& actions, PlayerActions& requests)
+{
+    for (std::size_t i = 0; i < kPlayerCount; ++i) {
+        controls_[i].update(inputs[i]);
+        if (actions[i].kind != ActionKind::None) {
+            requests[i] = actions[i];
+            continue;
+        }
+        controls::IntentConfig config;
+        config.attackDirection = players_[i].side == Side::Home ? 1.0f : -1.0f;
+        requests[i] = requestFromIntent(players_, players_[i], controls::desiredIntent(inputs[i], controls_[i], config));
+    }
+}
+
+void World::emit(MatchEvent event)
+{
+    event.tick = tick_;
+    events_.push_back(event);
+}
+
+void World::attachBall(const Player& carrier)
+{
+    const float speed = physics::length(carrier.velocity);
+    const Vec2 direction = unitOr(carrier.velocity, facingOf(carrier), tune::kCarryMinSpeed);
+    const float tighten = 1.0f - tune::kCarryDribbleTighten * skill(carrier.profile.attributes.dribbling);
+    const float distance = tune::kCarryBase + tune::kCarrySpeedLead * speed * tighten;
+    ball_.position = {carrier.position.x + direction.x * distance, carrier.position.y + direction.y * distance, physics::ball::kRadius};
+    ball_.velocity = {carrier.velocity.x, carrier.velocity.y, 0.0f};
+    ball_.spin = {};
+}
+
+void World::resolveActions(const PlayerActions& requests)
+{
+    for (std::size_t i = 0; i < kPlayerCount; ++i) {
+        const ActionRequest& request = requests[i];
+        if (request.kind == ActionKind::Tackle) {
+            tackle(i);
+        } else if (request.kind != ActionKind::None) {
+            kick(i, request);
+        }
+    }
+}
+
+void World::kick(std::size_t index, const ActionRequest& request)
+{
+    Player& p = players_[index];
+    const bool inReach = physics::distance(p.position, physics::xy(ball_.position)) <= tune::kKickReach && ball_.position.z <= tune::kKickHeight;
+    if (p.cooldown > 0 || !inReach) {
+        return;
+    }
+
+    const float pressure = pressureOn(p, players_.data(), players_.size());
+    const bool hasTarget = request.target < kPlayerCount;
+    Kick result;
+    MatchEvent event;
+    event.player = p.id;
+    event.side = p.side;
+    event.action = request.kind;
+
+    switch (request.kind) {
+    case ActionKind::Pass:
+    case ActionKind::Through: {
+        const bool through = request.kind == ActionKind::Through;
+        Vec2 aim = request.aim;
+        if (hasTarget) {
+            const Player& receiver = players_[request.target];
+            aim = through ? leadPoint(p.position, receiver, passSpeed(request.power)) : receiver.position;
+        }
+        result = passKick(p, aim, request.power, pressure, through, rng_);
+        event.kind = EventKind::Pass;
+        break;
+    }
+    case ActionKind::Cross: {
+        const Vec2 aim = hasTarget ? players_[request.target].position : request.aim;
+        result = crossKick(p, aim, pressure, rng_);
+        event.kind = EventKind::Pass;
+        break;
+    }
+    case ActionKind::Shoot:
+        result = shotKick(p, request.aim, request.power, pressure, request.lofted, rng_);
+        event.kind = EventKind::Shot;
+        break;
+    default:
+        return;
+    }
+
+    event.other = hasTarget ? request.target : kNoPlayer;
+    event.value = physics::length(result.velocity);
+    ball_.velocity = result.velocity;
+    ball_.spin = result.spin;
+    possessor_ = kNoPlayer;
+    lastToucher_ = p.id;
+    p.cooldown = tune::kKickCooldown;
+    emit(event);
+}
+
+void World::tackle(std::size_t index)
+{
+    Player& tackler = players_[index];
+    if (possessor_ == kNoPlayer || tackler.cooldown > 0) {
+        return;
+    }
+    Player& carrier = players_[possessor_];
+    if (carrier.side == tackler.side || physics::distance(tackler.position, carrier.position) > tune::kTackleReach) {
+        return;
+    }
+
+    const bool contested = rng_.nextFloat() < tackleSuccessChance(tackler, carrier);
+    const bool foul = rng_.nextFloat() < foulChance(tackler, contested);
+    const bool won = contested && !foul;
+
+    MatchEvent event;
+    event.kind = EventKind::Tackle;
+    event.player = tackler.id;
+    event.other = carrier.id;
+    event.side = tackler.side;
+    event.action = ActionKind::Tackle;
+    event.value = won ? 1.0f : 0.0f;
+    emit(event);
+    if (foul) {
+        event.kind = EventKind::FoulCandidate;
+        event.value = 0.0f;
+        emit(event);
+    }
+
+    if (won) {
+        const Vec2 away = unitOr(tackler.position - carrier.position, facingOf(tackler), 1e-4f);
+        ball_.velocity = {away.x * tune::kTackleKnock, away.y * tune::kTackleKnock, 0.0f};
+        possessor_ = kNoPlayer;
+        lastToucher_ = tackler.id;
+        carrier.cooldown = tune::kTackledCooldown;
+    } else {
+        tackler.cooldown = tune::kTackleFailCooldown;
+    }
+}
+
+void World::resolveLooseBall()
+{
+    const Vec2 ball = physics::xy(ball_.position);
+
+    std::uint32_t winner = kNoPlayer;
+    float bestScore = -1e9f;
+    if (ball_.position.z <= tune::kControlHeight) {
+        for (const Player& p : players_) {
+            const float d = physics::distance(p.position, ball);
+            if (p.cooldown > 0 || d > tune::kControlRadius) {
+                continue;
+            }
+            const auto& a = p.profile.attributes;
+            const float ability = 0.5f * skill(a.firstTouch) + 0.2f * skill(a.dribbling) + 0.3f * skill(a.strength);
+            const float score = ability + rng_.nextFloat() * tune::kContestNoise - d * tune::kContestDistanceWeight;
+            if (score > bestScore) {
+                bestScore = score;
+                winner = p.id;
+            }
+        }
+    }
+
+    if (winner == kNoPlayer) {
+        for (Player& p : players_) {
+            if (p.cooldown == 0 && ball_.position.z <= tune::kDeflectHeight && physics::distance(p.position, ball) < tune::kBodyContactRadius) {
+                deflect(p);
+            }
+        }
+        return;
+    }
+
+    Player& p = players_[winner];
+    const physics::Vec3 relative = ball_.velocity - physics::Vec3{p.velocity.x, p.velocity.y, 0.0f};
+    const float trapLimit = tune::kTrapSpeedBase + tune::kTrapSpeedSkill * skill(p.profile.attributes.firstTouch);
+    const float quality = 1.0f - physics::length(relative) / trapLimit;
+
+    MatchEvent event;
+    event.kind = EventKind::Touch;
+    event.player = p.id;
+    event.side = p.side;
+    lastToucher_ = p.id;
+
+    if (quality >= 0.0f) {
+        possessor_ = p.id;
+        attachBall(p);
+        event.value = quality;
+        emit(event);
+        return;
+    }
+
+    const float sx = rng_.nextFloat() * 2.0f - 1.0f;
+    const float sy = rng_.nextFloat() * 2.0f - 1.0f;
+    const float scatter = tune::kHeavyTouchScatter * std::min(-quality, 1.0f) * physics::length(relative);
+    Vec2 rel = {relative.x * tune::kHeavyTouchKeep + sx * scatter, relative.y * tune::kHeavyTouchKeep + sy * scatter};
+    const Vec2 outward = unitOr(ball - p.position, facingOf(p), 1e-4f);
+    const float into = physics::dot(rel, outward);
+    if (into < 0.0f) {
+        rel = rel - outward * into;
+    }
+    ball_.velocity = {p.velocity.x + rel.x, p.velocity.y + rel.y, relative.z * tune::kHeavyTouchKeep};
+    p.cooldown = tune::kHeavyTouchCooldown;
+    emit(event);
+}
+
+void World::deflect(Player& player)
+{
+    const Vec2 ball = physics::xy(ball_.position);
+    const Vec2 normal = unitOr(ball - player.position, facingOf(player), 1e-4f);
+    Vec2 rel = physics::xy(ball_.velocity) - player.velocity;
+    const float along = physics::dot(rel, normal);
+    if (along < 0.0f) {
+        rel = rel - normal * ((1.0f + tune::kDeflectRestitution) * along);
+        ball_.velocity.x = player.velocity.x + rel.x;
+        ball_.velocity.y = player.velocity.y + rel.y;
+    }
+    const Vec2 pushed = player.position + normal * tune::kBodyContactRadius;
+    ball_.position.x = pushed.x;
+    ball_.position.y = pushed.y;
+    lastToucher_ = player.id;
+
+    MatchEvent event;
+    event.kind = EventKind::Touch;
+    event.player = player.id;
+    event.side = player.side;
+    emit(event);
+}
+
+void World::checkBallStatus()
+{
+    const physics::BallStatus status = ball_.status();
+    if (ballDead_) {
+        ballDead_ = status.status != physics::PlayStatus::InPlay;
+        return;
+    }
+    if (status.status == physics::PlayStatus::InPlay) {
+        return;
+    }
+
+    ballDead_ = true;
+    possessor_ = kNoPlayer;
+    MatchEvent event;
+    event.player = lastToucher_;
+    event.line = status.line;
+    if (status.status == physics::PlayStatus::Goal) {
+        event.kind = EventKind::Goal;
+        event.side = status.scoredFor;
+    } else {
+        event.kind = EventKind::OutOfPlay;
+        event.side = lastToucher_ < kPlayerCount ? players_[lastToucher_].side : Side::Home;
+    }
+    emit(event);
 }
 
 std::uint64_t World::hash() const
@@ -124,7 +465,17 @@ std::uint64_t World::hash() const
     for (const Player& p : players_) {
         h = hashCombine(h, p.hash());
     }
-    return hashCombine(h, ball_.hash());
+    h = hashCombine(h, ball_.hash());
+    h = hashCombine(h, mix64(possessor_));
+    h = hashCombine(h, mix64(lastToucher_));
+    h = hashCombine(h, mix64(ballDead_ ? 1u : 0u));
+    h = hashCombine(h, mix64(rng_.state()));
+    for (const controls::ControlState& c : controls_) {
+        for (const InputFrame::Button b : {InputFrame::Pass, InputFrame::Through, InputFrame::Shoot, InputFrame::Sprint, InputFrame::Tackle, InputFrame::Switch, InputFrame::Pause}) {
+            h = hashCombine(h, mix64(static_cast<std::uint64_t>(c.heldTicks(b))));
+        }
+    }
+    return h;
 }
 
 }
