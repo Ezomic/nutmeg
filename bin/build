@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Configure, build and test Nutmeg. Same command on Windows (Git Bash) and Linux.
+#
+#   bin/build [preset]
+#
+# Presets: windows (default on Windows), linux (default on Linux), linux-asan.
+set -eu
+
+repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo"
+
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) default=windows ;;
+  *) default=linux ;;
+esac
+preset=${1:-$default}
+
+cmake_bin=$(command -v cmake || true)
+if [ -z "$cmake_bin" ]; then
+  for d in /e/VS2022 "/c/Program Files/Microsoft Visual Studio/2022/"*; do
+    candidate="$d/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin"
+    [ -x "$candidate/cmake.exe" ] && cmake_bin="$candidate/cmake.exe" && break
+  done
+fi
+[ -n "$cmake_bin" ] || { echo "build: cmake not found" >&2; exit 1; }
+ctest_bin="$(dirname "$cmake_bin")/ctest"
+[ -x "$ctest_bin" ] || [ -x "$ctest_bin.exe" ] || ctest_bin=ctest
+
+"$cmake_bin" --preset "$preset"
+"$cmake_bin" --build --preset "$preset"
+"$ctest_bin" --preset "$preset"
