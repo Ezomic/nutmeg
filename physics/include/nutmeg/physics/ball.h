@@ -2,6 +2,7 @@
 
 #include "nutmeg/physics/pitch.h"
 #include "nutmeg/physics/vec.h"
+#include "nutmeg/physics/weather.h"
 
 #include <cstdint>
 
@@ -36,6 +37,10 @@ constexpr float kRestSpeed = 0.3f;
 constexpr float kRollDecel = 1.2f;
 constexpr float kGroundSpinDecayPerSecond = 3.0f;
 
+// Posts and crossbar are steel or aluminium; the ball loses about half its
+// normal speed on contact.
+constexpr float kPostRestitution = 0.5f;
+
 }
 
 enum class Line { None, TouchlineMinusY, TouchlinePlusY, GoalLineMinusX, GoalLinePlusX };
@@ -60,7 +65,7 @@ struct Ball {
     Vec3 velocity;
     Vec3 spin; // angular velocity in rad/s, right-hand rule
 
-    void step();
+    void step(const Weather& weather = {});
     bool grounded() const { return position.z <= ball::kRadius && velocity.z == 0.0f; }
     BallStatus status() const { return classify(position); }
     float mechanicalEnergyPerKg() const;
