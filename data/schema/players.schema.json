@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nutmeg.example/schema/players.schema.json",
+  "title": "Nutmeg data pack players",
+  "type": "object",
+  "required": ["players"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "players": { "type": "array", "items": { "$ref": "#/$defs/player" } }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$" },
+    "ref": {
+      "type": "string",
+      "pattern": "^([a-z0-9][a-z0-9_-]{0,47}/)?[a-z0-9][a-z0-9_-]{0,47}$"
+    },
+    "rating": { "type": "integer", "minimum": 1, "maximum": 100 },
+    "attributes": {
+      "type": "object",
+      "required": ["vision", "passing", "dribbling", "finishing", "tackling", "pace"],
+      "properties": {
+        "vision": { "$ref": "#/$defs/rating" },
+        "passing": { "$ref": "#/$defs/rating" },
+        "dribbling": { "$ref": "#/$defs/rating" },
+        "finishing": { "$ref": "#/$defs/rating" },
+        "tackling": { "$ref": "#/$defs/rating" },
+        "pace": { "$ref": "#/$defs/rating" }
+      },
+      "additionalProperties": { "$ref": "#/$defs/rating" },
+      "description": "The six core attributes are required. Attributes added by later minor revisions of the format are optional and default in the engine; unknown keys must be integer ratings."
+    },
+    "player": {
+      "type": "object",
+      "required": ["id", "name", "position", "age", "attributes"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "club": { "$ref": "#/$defs/ref", "description": "Owning club. Omit for a free agent." },
+        "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "number": { "type": "integer", "minimum": 1, "maximum": 99 },
+        "position": { "enum": ["GK", "DF", "MF", "FW"] },
+        "age": { "type": "integer", "minimum": 15, "maximum": 45 },
+        "potential": { "$ref": "#/$defs/rating" },
+        "attributes": { "$ref": "#/$defs/attributes" },
+        "handling": { "$ref": "#/$defs/rating", "description": "Goalkeeper shot-stopping. Ignored for outfield players." },
+        "trait": { "enum": ["clinical", "playmaker", "pacey", "enforcer", "dribbler"] }
+      }
+    }
+  }
+}

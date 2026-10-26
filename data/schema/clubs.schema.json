@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nutmeg.example/schema/clubs.schema.json",
+  "title": "Nutmeg data pack clubs",
+  "type": "object",
+  "required": ["clubs"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "clubs": { "type": "array", "items": { "$ref": "#/$defs/club" } }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$" },
+    "ref": {
+      "type": "string",
+      "pattern": "^([a-z0-9][a-z0-9_-]{0,47}/)?[a-z0-9][a-z0-9_-]{0,47}$",
+      "description": "An id in this pack, or pack_id/id to point into a required pack."
+    },
+    "rating": { "type": "integer", "minimum": 1, "maximum": 100 },
+    "club": {
+      "type": "object",
+      "required": ["id", "name", "short_name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "short_name": { "type": "string", "minLength": 2, "maxLength": 4 },
+        "city": { "type": "string", "maxLength": 60 },
+        "stadium": { "type": "string", "maxLength": 60 },
+        "division": { "type": "integer", "minimum": 1, "default": 1 },
+        "formation": { "enum": ["442", "433", "352", "4231", "532", "343"], "default": "442" },
+        "mentality": { "enum": ["attacking", "balanced", "defensive"], "default": "balanced" },
+        "style": { "type": "string", "maxLength": 40 },
+        "keeping": { "$ref": "#/$defs/rating" },
+        "set_pieces": { "$ref": "#/$defs/rating" },
+        "rivals": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/ref" } },
+        "badge": { "$ref": "#/$defs/ref" },
+        "kits": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "home": { "$ref": "#/$defs/ref" },
+            "away": { "$ref": "#/$defs/ref" },
+            "third": { "$ref": "#/$defs/ref" },
+            "goalkeeper": { "$ref": "#/$defs/ref" }
+          }
+        }
+      }
+    }
+  }
+}
