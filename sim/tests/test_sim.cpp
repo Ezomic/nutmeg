@@ -150,3 +150,33 @@ TEST_CASE("only the controlled player moves under a human input")
         REQUIRE(moved == (i == Simulation::kControlledPlayer));
     }
 }
+
+TEST_CASE("a live human input with idle others takes the ball and shoots it")
+{
+    Simulation sim(5);
+    constexpr std::size_t human = Simulation::kControlledPlayer;
+    bool shot = false;
+    bool controlled = false;
+    int heldFor = 0;
+    for (int tick = 0; tick < 1200 && !shot; ++tick) {
+        const gameplay::World& world = sim.world();
+        InputFrame input;
+        if (!controlled) {
+            const physics::Vec2 d = physics::xy(world.ball().position) - world.players()[human].position;
+            const float len = physics::length(d);
+            input.moveY = d.x / len;
+            input.moveX = -d.y / len;
+            controlled = world.possessor() == human;
+        } else {
+            input.moveY = 0.0f;
+            input.buttons = ++heldFor <= 30 ? InputFrame::Shoot : 0u;
+        }
+        sim.tick(input);
+        for (const gameplay::MatchEvent& e : sim.world().events()) {
+            shot = shot || (e.kind == gameplay::EventKind::Shot && e.player == human);
+        }
+    }
+    REQUIRE(controlled);
+    REQUIRE(shot);
+    REQUIRE(sim.world().ball().velocity.x > 0.0f);
+}

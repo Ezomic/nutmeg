@@ -15,7 +15,8 @@ public:
     static constexpr double kStepSeconds = 1.0 / 60.0;
 
     explicit Simulation(std::uint64_t seed)
-        : rng_(Rng(seed).derive("sim"))
+        : world_(seed)
+        , rng_(Rng(seed).derive("sim"))
     {
     }
 
