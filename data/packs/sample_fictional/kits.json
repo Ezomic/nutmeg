@@ -1,0 +1,50 @@
+{
+  "$schema": "../../schema/kits.schema.json",
+  "kits": [
+    {
+      "id": "harbour_blue",
+      "name": "Harbour home",
+      "pattern": "hoops",
+      "primary": "#1e4fa3",
+      "secondary": "#ffffff",
+      "shorts": "#ffffff",
+      "socks": "#1e4fa3"
+    },
+    {
+      "id": "harbour_white",
+      "name": "Harbour away",
+      "pattern": "plain",
+      "primary": "#f4f4f0",
+      "secondary": "#1e4fa3",
+      "shorts": "#1e4fa3",
+      "socks": "#f4f4f0"
+    },
+    {
+      "id": "vale_red",
+      "name": "Vale home",
+      "pattern": "stripes",
+      "primary": "#b3262d",
+      "secondary": "#ffffff",
+      "shorts": "#ffffff",
+      "socks": "#b3262d"
+    },
+    {
+      "id": "vale_gold",
+      "name": "Vale away",
+      "pattern": "halves",
+      "primary": "#e0b324",
+      "secondary": "#222222",
+      "shorts": "#222222",
+      "socks": "#e0b324"
+    },
+    {
+      "id": "keeper_green",
+      "name": "Goalkeeper",
+      "pattern": "plain",
+      "primary": "#2e9e4f",
+      "secondary": "#1b5e30",
+      "shorts": "#1b5e30",
+      "socks": "#2e9e4f"
+    }
+  ]
+}

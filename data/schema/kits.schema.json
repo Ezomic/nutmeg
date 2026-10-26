@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nutmeg.example/schema/kits.schema.json",
+  "title": "Nutmeg data pack kits",
+  "type": "object",
+  "required": ["kits"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "kits": { "type": "array", "items": { "$ref": "#/$defs/kit" } }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$" },
+    "colour": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "kit": {
+      "type": "object",
+      "required": ["id", "pattern", "primary", "secondary", "shorts", "socks"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "name": { "type": "string", "maxLength": 60 },
+        "pattern": { "enum": ["plain", "hoops", "stripes", "halves", "sash", "chevron"] },
+        "primary": { "$ref": "#/$defs/colour" },
+        "secondary": { "$ref": "#/$defs/colour" },
+        "shorts": { "$ref": "#/$defs/colour" },
+        "socks": { "$ref": "#/$defs/colour" }
+      }
+    }
+  }
+}
