@@ -1,0 +1,431 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "0.1.0",
+  "matchId": "fixture-4021",
+  "seed": -1,
+  "context": {
+    "homeAdvantage": 1.06,
+    "weather": {
+      "kind": "clear"
+    }
+  },
+  "home": {
+    "name": "Harbour FC",
+    "formation": "999",
+    "mentality": "attacking",
+    "lineup": [
+      {
+        "id": 1,
+        "name": "Harbour FC 1",
+        "position": "GK",
+        "attributes": {
+          "vision": 68,
+          "passing": 70,
+          "dribbling": 65,
+          "finishing": 69,
+          "tackling": 67,
+          "pace": 71,
+          "stamina": 70,
+          "goalkeeping": 12
+        },
+        "slot": 0
+      },
+      {
+        "id": 2,
+        "name": "Harbour FC 2",
+        "position": "DF",
+        "attributes": {
+          "vision": 69,
+          "passing": 71,
+          "dribbling": 66,
+          "finishing": 70,
+          "tackling": 76,
+          "pace": 72
+        },
+        "slot": 1
+      },
+      {
+        "id": 3,
+        "name": "Harbour FC 3",
+        "position": "DF",
+        "attributes": {
+          "vision": 70,
+          "passing": 72,
+          "dribbling": 67,
+          "finishing": 71,
+          "tackling": 77,
+          "pace": 73
+        },
+        "slot": 2
+      },
+      {
+        "id": 5,
+        "name": "Harbour FC 5",
+        "position": "DF",
+        "attributes": {
+          "vision": 72,
+          "passing": 74,
+          "dribbling": 69,
+          "finishing": 73,
+          "tackling": 79,
+          "pace": 75
+        },
+        "slot": 4
+      },
+      {
+        "id": 6,
+        "name": "Harbour FC 6",
+        "position": "MF",
+        "attributes": {
+          "vision": 68,
+          "passing": 70,
+          "dribbling": 65,
+          "finishing": 69,
+          "tackling": 67,
+          "pace": 71
+        },
+        "slot": 5
+      },
+      {
+        "id": 7,
+        "name": "Harbour FC 7",
+        "position": "MF",
+        "attributes": {
+          "vision": 69,
+          "passing": 71,
+          "dribbling": 66,
+          "finishing": 70,
+          "tackling": 68,
+          "pace": 72
+        },
+        "slot": 6
+      },
+      {
+        "id": 8,
+        "name": "Harbour FC 8",
+        "position": "MF",
+        "attributes": {
+          "vision": 70,
+          "passing": 72,
+          "dribbling": 67,
+          "finishing": 71,
+          "tackling": 69,
+          "pace": 73
+        },
+        "slot": 7
+      },
+      {
+        "id": 9,
+        "name": "Harbour FC 9",
+        "position": "FW",
+        "attributes": {
+          "vision": 71,
+          "passing": 73,
+          "dribbling": 68,
+          "finishing": 80,
+          "tackling": 70,
+          "pace": 74
+        },
+        "slot": 8
+      },
+      {
+        "id": 10,
+        "name": "Harbour FC 10",
+        "position": "FW",
+        "attributes": {
+          "vision": 72,
+          "passing": 74,
+          "dribbling": 69,
+          "finishing": 81,
+          "tackling": 71,
+          "pace": 75
+        },
+        "slot": 9
+      },
+      {
+        "id": 11,
+        "name": "Harbour FC 11",
+        "position": "FW",
+        "attributes": {
+          "vision": 68,
+          "passing": 70,
+          "dribbling": 65,
+          "finishing": 77,
+          "tackling": 67,
+          "pace": 71
+        },
+        "slot": 10
+      }
+    ],
+    "bench": [
+      {
+        "id": 12,
+        "name": "Harbour FC Sub 1",
+        "position": "GK",
+        "attributes": {
+          "vision": 63,
+          "passing": 65,
+          "dribbling": 60,
+          "finishing": 64,
+          "tackling": 62,
+          "pace": 66
+        }
+      },
+      {
+        "id": 13,
+        "name": "Harbour FC Sub 2",
+        "position": "DF",
+        "attributes": {
+          "vision": 63,
+          "passing": 65,
+          "dribbling": 60,
+          "finishing": 64,
+          "tackling": 70,
+          "pace": 66
+        }
+      },
+      {
+        "id": 14,
+        "name": "Harbour FC Sub 3",
+        "position": "MF",
+        "attributes": {
+          "vision": 63,
+          "passing": 65,
+          "dribbling": 60,
+          "finishing": 64,
+          "tackling": 62,
+          "pace": 66
+        }
+      },
+      {
+        "id": 15,
+        "name": "Harbour FC Sub 4",
+        "position": "FW",
+        "attributes": {
+          "vision": 63,
+          "passing": 65,
+          "dribbling": 60,
+          "finishing": 72,
+          "tackling": 62,
+          "pace": 66
+        }
+      }
+    ]
+  },
+  "away": {
+    "name": "Dale United",
+    "formation": "442",
+    "mentality": "balanced",
+    "lineup": [
+      {
+        "id": 101,
+        "name": "Dale United 1",
+        "position": "GK",
+        "attributes": {
+          "vision": 62,
+          "passing": 64,
+          "dribbling": 59,
+          "finishing": 63,
+          "tackling": 61,
+          "pace": 65,
+          "stamina": 70,
+          "goalkeeping": 12
+        },
+        "slot": 0
+      },
+      {
+        "id": 102,
+        "name": "Dale United 2",
+        "position": "DF",
+        "attributes": {
+          "vision": 63,
+          "passing": 65,
+          "dribbling": 60,
+          "finishing": 64,
+          "tackling": 70,
+          "pace": 66
+        },
+        "slot": 1
+      },
+      {
+        "id": 103,
+        "name": "Dale United 3",
+        "position": "DF",
+        "attributes": {
+          "vision": 64,
+          "passing": 66,
+          "dribbling": 61,
+          "finishing": 65,
+          "tackling": 71,
+          "pace": 101
+        },
+        "slot": 2
+      },
+      {
+        "id": 104,
+        "name": "Dale United 4",
+        "position": "DF",
+        "attributes": {
+          "vision": 65,
+          "passing": 67,
+          "dribbling": 62,
+          "finishing": 66,
+          "tackling": 72,
+          "pace": 68
+        },
+        "slot": 3
+      },
+      {
+        "id": 105,
+        "name": "Dale United 5",
+        "position": "DF",
+        "attributes": {
+          "passing": 68,
+          "dribbling": 63,
+          "finishing": 67,
+          "tackling": 73,
+          "pace": 69
+        },
+        "slot": 4
+      },
+      {
+        "id": 106,
+        "name": "Dale United 6",
+        "position": "MF",
+        "attributes": {
+          "vision": 62,
+          "passing": 64,
+          "dribbling": 59,
+          "finishing": 63,
+          "tackling": 61,
+          "pace": 65
+        },
+        "slot": 5
+      },
+      {
+        "id": 107,
+        "name": "Dale United 7",
+        "position": "MF",
+        "attributes": {
+          "vision": 63,
+          "passing": 65,
+          "dribbling": 60,
+          "finishing": 64,
+          "tackling": 62,
+          "pace": 66
+        },
+        "slot": 6
+      },
+      {
+        "id": 108,
+        "name": "Dale United 8",
+        "position": "MF",
+        "attributes": {
+          "vision": 64,
+          "passing": 66,
+          "dribbling": 61,
+          "finishing": 65,
+          "tackling": 63,
+          "pace": 67
+        },
+        "slot": 7
+      },
+      {
+        "id": 109,
+        "name": "Dale United 9",
+        "position": "FW",
+        "attributes": {
+          "vision": 65,
+          "passing": 67,
+          "dribbling": 62,
+          "finishing": 74,
+          "tackling": 64,
+          "pace": 68
+        },
+        "slot": 8
+      },
+      {
+        "id": 110,
+        "name": "Dale United 10",
+        "position": "FW",
+        "attributes": {
+          "vision": 66,
+          "passing": 68,
+          "dribbling": 63,
+          "finishing": 75,
+          "tackling": 65,
+          "pace": 69
+        },
+        "slot": 9
+      },
+      {
+        "id": 111,
+        "name": "Dale United 11",
+        "position": "FW",
+        "attributes": {
+          "vision": 62,
+          "passing": 64,
+          "dribbling": 59,
+          "finishing": 71,
+          "tackling": 61,
+          "pace": 65
+        },
+        "slot": 10
+      }
+    ],
+    "bench": [
+      {
+        "id": 112,
+        "name": "Dale United Sub 1",
+        "position": "GK",
+        "attributes": {
+          "vision": 57,
+          "passing": 59,
+          "dribbling": 54,
+          "finishing": 58,
+          "tackling": 56,
+          "pace": 60
+        }
+      },
+      {
+        "id": 113,
+        "name": "Dale United Sub 2",
+        "position": "DF",
+        "attributes": {
+          "vision": 57,
+          "passing": 59,
+          "dribbling": 54,
+          "finishing": 58,
+          "tackling": 64,
+          "pace": 60
+        }
+      },
+      {
+        "id": 114,
+        "name": "Dale United Sub 3",
+        "position": "MF",
+        "attributes": {
+          "vision": 57,
+          "passing": 59,
+          "dribbling": 54,
+          "finishing": 58,
+          "tackling": 56,
+          "pace": 60
+        }
+      },
+      {
+        "id": 115,
+        "name": "Dale United Sub 4",
+        "position": "FW",
+        "attributes": {
+          "vision": 57,
+          "passing": 59,
+          "dribbling": 54,
+          "finishing": 66,
+          "tackling": 56,
+          "pace": 60
+        }
+      }
+    ]
+  }
+}

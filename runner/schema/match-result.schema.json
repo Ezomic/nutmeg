@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Ezomic/nutmeg/runner/schema/match-result.schema.json",
+  "title": "Nutmeg match result, schema version 1",
+  "type": "object",
+  "required": ["schemaVersion", "engineVersion", "stub", "seed", "score", "teams", "players", "events"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "enum": [1] },
+    "engineVersion": { "type": "string", "pattern": "^[0-9]+[.][0-9]+[.][0-9]+$" },
+    "stub": { "type": "boolean" },
+    "matchId": { "type": "string" },
+    "seed": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "score": {
+      "type": "object",
+      "required": ["home", "away"],
+      "properties": {
+        "home": { "type": "integer", "minimum": 0 },
+        "away": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "teams": {
+      "type": "object",
+      "required": ["home", "away"],
+      "properties": {
+        "home": { "$ref": "#/$defs/teamStats" },
+        "away": { "$ref": "#/$defs/teamStats" }
+      }
+    },
+    "players": { "type": "array", "items": { "$ref": "#/$defs/playerStats" } },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/event" } }
+  },
+  "$defs": {
+    "teamStats": {
+      "type": "object",
+      "required": [
+        "possession", "shots", "onTarget", "goals", "passes", "passesCompleted", "crosses",
+        "fouls", "corners", "offsides", "yellowCards", "redCards", "tackles", "saves"
+      ],
+      "properties": {
+        "possession": { "type": "number", "minimum": 0, "maximum": 100 },
+        "shots": { "type": "integer", "minimum": 0 },
+        "onTarget": { "type": "integer", "minimum": 0 },
+        "goals": { "type": "integer", "minimum": 0 },
+        "passes": { "type": "integer", "minimum": 0 },
+        "passesCompleted": { "type": "integer", "minimum": 0 },
+        "crosses": { "type": "integer", "minimum": 0 },
+        "fouls": { "type": "integer", "minimum": 0 },
+        "corners": { "type": "integer", "minimum": 0 },
+        "offsides": { "type": "integer", "minimum": 0 },
+        "yellowCards": { "type": "integer", "minimum": 0 },
+        "redCards": { "type": "integer", "minimum": 0 },
+        "tackles": { "type": "integer", "minimum": 0 },
+        "saves": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "playerStats": {
+      "type": "object",
+      "required": [
+        "id", "team", "minutes", "rating", "goals", "shots", "passes", "passesCompleted", "crosses",
+        "tackles", "interceptions", "clearances", "fouls", "saves"
+      ],
+      "properties": {
+        "id": { "type": "integer", "minimum": 1 },
+        "team": { "type": "string", "enum": ["home", "away"] },
+        "minutes": { "type": "integer", "minimum": 0, "maximum": 130 },
+        "rating": { "type": "number", "minimum": 1, "maximum": 10 },
+        "goals": { "type": "integer", "minimum": 0 },
+        "shots": { "type": "integer", "minimum": 0 },
+        "passes": { "type": "integer", "minimum": 0 },
+        "passesCompleted": { "type": "integer", "minimum": 0 },
+        "crosses": { "type": "integer", "minimum": 0 },
+        "tackles": { "type": "integer", "minimum": 0 },
+        "interceptions": { "type": "integer", "minimum": 0 },
+        "clearances": { "type": "integer", "minimum": 0 },
+        "fouls": { "type": "integer", "minimum": 0 },
+        "saves": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["minute", "type", "team", "playerId", "x", "y"],
+      "properties": {
+        "minute": { "type": "integer", "minimum": 0, "maximum": 130 },
+        "type": {
+          "type": "string",
+          "enum": [
+            "shot", "goal", "save", "block", "foul", "corner", "offside", "yellow_card", "red_card",
+            "pass", "cross", "dribble", "turnover", "interception", "tackle", "slide_tackle",
+            "clearance", "header", "throw_in", "goal_kick", "penalty"
+          ]
+        },
+        "team": { "type": "string", "enum": ["home", "away"] },
+        "playerId": { "type": "integer", "minimum": 1 },
+        "otherPlayerId": { "type": "integer", "minimum": 1 },
+        "outcome": { "type": "string", "enum": ["goal", "saved", "blocked", "off"] },
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}
