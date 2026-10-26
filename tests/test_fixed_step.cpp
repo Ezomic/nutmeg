@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) Nutmeg contributors
+
 #include "nutmeg/core/fixed_step.h"
 
 #include <catch2/catch_approx.hpp>

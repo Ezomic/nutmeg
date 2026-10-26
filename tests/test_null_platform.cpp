@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) Nutmeg contributors
+
 #include "nutmeg/platform/null_platform.h"
 
 #include <catch2/catch_test_macros.hpp>

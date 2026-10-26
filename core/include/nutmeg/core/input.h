@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) Nutmeg contributors
+
 #pragma once
 
 #include "nutmeg/core/reflect.h"

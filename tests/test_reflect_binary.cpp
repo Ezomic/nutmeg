@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) Nutmeg contributors
+
 #include "nutmeg/core/binary.h"
 #include "nutmeg/core/input.h"
 
