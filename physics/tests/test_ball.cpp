@@ -235,3 +235,184 @@ TEST_CASE("the same initial state gives the same trajectory hash")
     run(b, 10);
     REQUIRE(a.hash() != b.hash());
 }
+
+TEST_CASE("clear weather trajectory hash is pinned")
+{
+    Ball b = at({-10.0f, 3.0f, kR}, {22.0f, -4.0f, 6.0f}, {5.0f, -8.0f, 40.0f});
+    std::uint64_t h = 0;
+    for (int i = 0; i < 600; ++i) {
+        b.step();
+        h = h * 1099511628211ull + b.hash();
+    }
+    REQUIRE(h == 0xd78a51c32a8cc320ull);
+}
+
+namespace {
+
+std::uint64_t trajectoryHash(const Weather& weather)
+{
+    Ball b = at({-10.0f, 3.0f, kR}, {22.0f, -4.0f, 6.0f}, {5.0f, -8.0f, 40.0f});
+    std::uint64_t h = 0;
+    for (int i = 0; i < 600; ++i) {
+        b.step(weather);
+        h = h * 1099511628211ull + b.hash();
+    }
+    return h;
+}
+
+float rollDistance(const Weather& weather)
+{
+    Ball b = at({0.0f, 0.0f, kR}, {10.0f, 0.0f, 0.0f});
+    for (int i = 0; i < 60 * 30; ++i) b.step(weather);
+    return b.position.x;
+}
+
+}
+
+TEST_CASE("a default weather is the clear trajectory")
+{
+    REQUIRE(trajectoryHash(Weather{}) == 0xd78a51c32a8cc320ull);
+}
+
+TEST_CASE("the same inputs and weather give the same hash")
+{
+    const Weather storm{{6.0f, -3.0f}, 0.8f, 0.9f};
+    REQUIRE(trajectoryHash(storm) == trajectoryHash(storm));
+    REQUIRE(trajectoryHash(storm) != trajectoryHash(Weather{}));
+}
+
+TEST_CASE("wind carries a ball downwind")
+{
+    const Weather tailwind{{8.0f, 0.0f}};
+    const Weather crosswind{{0.0f, -8.0f}};
+    Ball still = at({0.0f, 0.0f, kR}, {0.0f, 0.0f, 15.0f});
+    Ball pushed = still;
+    Ball sideways = still;
+    for (int i = 0; i < 90; ++i) {
+        still.step();
+        pushed.step(tailwind);
+        sideways.step(crosswind);
+    }
+    REQUIRE(still.position.x == 0.0f);
+    REQUIRE(pushed.position.x > 1.0f);
+    REQUIRE(pushed.position.y == 0.0f);
+    REQUIRE(sideways.position.y < -1.0f);
+}
+
+TEST_CASE("a headwind shortens a kick and a tailwind lengthens it")
+{
+    auto range = [](Vec2 wind) {
+        Ball b = at({0.0f, 0.0f, kR}, {20.0f, 0.0f, 8.0f});
+        const Weather weather{wind};
+        for (int i = 0; i < 300; ++i) {
+            b.step(weather);
+            if (b.velocity.z == 0.0f || b.position.z <= kR) break;
+        }
+        return b.position.x;
+    };
+    REQUIRE(range({-8.0f, 0.0f}) < range({0.0f, 0.0f}));
+    REQUIRE(range({8.0f, 0.0f}) > range({0.0f, 0.0f}));
+}
+
+TEST_CASE("a resting ball is not shifted by a light breeze")
+{
+    Ball b = at({0.0f, 0.0f, kR});
+    const Weather breeze{{3.0f, 0.0f}};
+    run(b, 60);
+    for (int i = 0; i < 60; ++i) b.step(breeze);
+    REQUIRE(b.position.x == 0.0f);
+}
+
+TEST_CASE("a wet pitch lets the ball roll further")
+{
+    const float dry = rollDistance(Weather{});
+    const float wet = rollDistance(Weather{{}, 0.0f, 1.0f});
+    REQUIRE(wet > dry * 1.2f);
+}
+
+TEST_CASE("a wet pitch skids the ball on and rain deadens the bounce")
+{
+    auto bounce = [](const Weather& weather) {
+        Ball b = at({0.0f, 0.0f, 1.0f}, {6.0f, 0.0f, 0.0f});
+        for (int i = 0; i < 120; ++i) {
+            b.step(weather);
+            if (b.velocity.z > 0.0f) break;
+        }
+        return b;
+    };
+    const Ball dry = bounce(Weather{});
+    const Ball wet = bounce(Weather{{}, 0.0f, 1.0f});
+    const Ball rain = bounce(Weather{{}, 1.0f, 0.0f});
+    REQUIRE(wet.velocity.x > dry.velocity.x);
+    REQUIRE(rain.velocity.z < dry.velocity.z);
+}
+
+TEST_CASE("a shot at a post rebounds with reduced speed")
+{
+    constexpr float postX = pitch::kHalfLength;
+    constexpr float postY = pitch::kHalfGoalWidth;
+    const Vec3 launch{30.0f, 0.0f, 0.0f};
+    Ball b = at({postX - 10.0f, postY, 1.0f}, launch);
+    b.velocity.z = 0.0f;
+    float rebound = 0.0f;
+    for (int i = 0; i < 90; ++i) {
+        b.step();
+        REQUIRE(b.status().status != PlayStatus::Goal);
+        REQUIRE(b.position.x < postX);
+        if (b.velocity.x < 0.0f) rebound = std::max(rebound, -b.velocity.x);
+    }
+    REQUIRE(rebound > 5.0f);
+    REQUIRE(rebound < 0.6f * 30.0f);
+    REQUIRE(b.status().status == PlayStatus::InPlay);
+}
+
+TEST_CASE("a fast shot cannot tunnel through a post")
+{
+    for (const float speed : {20.0f, 35.0f, 50.0f}) {
+        for (const float offset : {-0.1f, 0.0f, 0.1f}) {
+            const Vec2 post = pitch::postMinusY(Side::Away);
+            Ball b = at({post.x - 5.0f, post.y + offset, 1.0f}, {speed, 0.0f, 0.0f});
+            for (int i = 0; i < 60; ++i) {
+                b.step();
+                REQUIRE(distance(xy(b.position), post) >= kR + pitch::kPostRadius - 1e-3f);
+            }
+        }
+    }
+}
+
+TEST_CASE("a shot through the gap scores")
+{
+    Ball b = at({pitch::kHalfLength - 12.0f, 0.5f, 1.0f}, {30.0f, 0.0f, 0.0f});
+    b.velocity.z = 0.5f;
+    PlayStatus seen = PlayStatus::InPlay;
+    for (int i = 0; i < 60 && seen == PlayStatus::InPlay; ++i) {
+        b.step();
+        seen = b.status().status;
+    }
+    REQUIRE(seen == PlayStatus::Goal);
+    REQUIRE(b.status().scoredFor == Side::Home);
+}
+
+TEST_CASE("a ball hitting the underside of the bar bounces down")
+{
+    Ball b = at({pitch::kHalfLength, 0.0f, 1.0f}, {0.0f, 0.0f, 14.0f});
+    float peak = 0.0f;
+    bool bounced = false;
+    for (int i = 0; i < 60; ++i) {
+        b.step();
+        peak = std::max(peak, b.position.z);
+        if (b.velocity.z < 0.0f) bounced = true;
+    }
+    REQUIRE(bounced);
+    REQUIRE(peak < pitch::kGoalHeight);
+    REQUIRE(b.position.z < pitch::kGoalHeight);
+}
+
+TEST_CASE("a ball over the bar stays over it")
+{
+    Ball b = at({pitch::kHalfLength - 3.0f, 0.0f, 2.8f}, {20.0f, 0.0f, -1.0f});
+    for (int i = 0; i < 30; ++i) {
+        b.step();
+        REQUIRE(b.status().status != PlayStatus::Goal);
+    }
+}
