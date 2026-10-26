@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schema/badges.schema.json",
+  "badges": [
+    {
+      "id": "harbour_badge",
+      "name": "Harbour Rovers",
+      "shape": "shield",
+      "primary": "#1e4fa3",
+      "secondary": "#ffffff"
+    },
+    {
+      "id": "vale_badge",
+      "name": "Vale United",
+      "shape": "round",
+      "primary": "#b3262d",
+      "secondary": "#e0b324"
+    }
+  ]
+}

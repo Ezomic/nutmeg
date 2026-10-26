@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) Nutmeg contributors
+
 #include "nutmeg/core/file_io.h"
 
 #include "nutmeg/core/log.h"

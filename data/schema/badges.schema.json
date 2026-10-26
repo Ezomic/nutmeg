@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nutmeg.example/schema/badges.schema.json",
+  "title": "Nutmeg data pack badges",
+  "type": "object",
+  "required": ["badges"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "badges": { "type": "array", "items": { "$ref": "#/$defs/badge" } }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$" },
+    "colour": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "badge": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "name": { "type": "string", "maxLength": 60 },
+        "image": {
+          "type": "string",
+          "pattern": "^assets/[A-Za-z0-9_-][A-Za-z0-9_./-]*\\.(png|svg)$",
+          "description": "Path inside the pack, under assets/. Loaders also reject any parent-directory segment."
+        },
+        "shape": { "enum": ["shield", "round", "square"], "description": "Generated placeholder shape, used when no image is given." },
+        "primary": { "$ref": "#/$defs/colour" },
+        "secondary": { "$ref": "#/$defs/colour" },
+        "real_world": { "type": "boolean", "default": false, "description": "True if the image reproduces a real crest or logo." }
+      },
+      "anyOf": [
+        { "required": ["image"] },
+        { "required": ["shape", "primary", "secondary"] }
+      ]
+    }
+  }
+}

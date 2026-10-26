@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nutmeg.example/schema/manifest.schema.json",
+  "title": "Nutmeg data pack manifest",
+  "type": "object",
+  "required": ["format", "id", "name", "author", "licence", "version", "contains_real_names"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "format": { "const": 1, "description": "Data pack format version. Bumped only on breaking changes." },
+    "id": { "$ref": "#/$defs/slug" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "description": { "type": "string", "maxLength": 500 },
+    "author": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "homepage": { "type": "string", "format": "uri" },
+    "licence": {
+      "enum": ["CC0-1.0", "CC-BY-SA-4.0"],
+      "description": "SPDX identifier covering every file in the pack."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+      "description": "Pack version, semantic versioning."
+    },
+    "contains_real_names": {
+      "type": "boolean",
+      "description": "True if any club, player, kit or badge uses a real-world name or likeness."
+    },
+    "contains_real_badges": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if any badge image reproduces a real-world crest or logo."
+    },
+    "rights_statement": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Required when contains_real_names or contains_real_badges is true: who takes responsibility for the real-world names and marks."
+    },
+    "requires": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/slug" },
+      "description": "Pack ids that must be loaded before this one. References into them resolve by id."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "anyOf": [
+          { "properties": { "contains_real_names": { "const": true } }, "required": ["contains_real_names"] },
+          { "properties": { "contains_real_badges": { "const": true } }, "required": ["contains_real_badges"] }
+        ]
+      },
+      "then": { "required": ["rights_statement"] }
+    }
+  ],
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,47}$" }
+  }
+}
