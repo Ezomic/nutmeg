@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 project(nutmeg LANGUAGES CXX)
 
+option(NUTMEG_RUNTIME "Build the SDL3 window, platform and debug view (needs a display to run)" OFF)
 option(NUTMEG_SANITIZERS "Build with AddressSanitizer and UndefinedBehaviorSanitizer (gcc and clang)" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -32,6 +33,21 @@ endif()
 
 enable_testing()
 
+if(NUTMEG_RUNTIME)
+    include(FetchContent)
+    set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+    set(SDL_STATIC ON CACHE BOOL "" FORCE)
+    set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+    set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+    set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(SDL3
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG release-3.2.30
+        GIT_SHALLOW TRUE)
+    FetchContent_MakeAvailable(SDL3)
+endif()
+
 add_subdirectory(core)
 add_subdirectory(platform)
+add_subdirectory(debugview)
 add_subdirectory(tests)

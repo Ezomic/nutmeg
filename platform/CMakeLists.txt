@@ -1,4 +1,10 @@
 file(GLOB nutmeg_platform_sources CONFIGURE_DEPENDS src/*.cpp)
+list(REMOVE_ITEM nutmeg_platform_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/sdl_platform.cpp)
 add_library(nutmeg_platform ${nutmeg_platform_sources})
 target_include_directories(nutmeg_platform PUBLIC include)
 target_link_libraries(nutmeg_platform PUBLIC nutmeg_core nutmeg_warnings)
+
+if(NUTMEG_RUNTIME)
+    add_library(nutmeg_platform_sdl src/sdl_platform.cpp)
+    target_link_libraries(nutmeg_platform_sdl PUBLIC nutmeg_platform PRIVATE SDL3::SDL3)
+endif()
