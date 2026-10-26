@@ -1,0 +1,625 @@
+{
+  "$schema": "../../schema/players.schema.json",
+  "players": [
+    {
+      "id": "yves_dunmore",
+      "club": "harbour_rovers",
+      "name": "Yves Dunmore",
+      "number": 1,
+      "position": "GK",
+      "age": 27,
+      "attributes": {
+        "vision": 52,
+        "passing": 54,
+        "dribbling": 34,
+        "finishing": 25,
+        "tackling": 29,
+        "pace": 43
+      },
+      "potential": 56,
+      "handling": 64
+    },
+    {
+      "id": "zeke_thorne",
+      "club": "harbour_rovers",
+      "name": "Zeke Thorne",
+      "number": 13,
+      "position": "GK",
+      "age": 26,
+      "attributes": {
+        "vision": 46,
+        "passing": 52,
+        "dribbling": 22,
+        "finishing": 25,
+        "tackling": 30,
+        "pace": 41
+      },
+      "potential": 57,
+      "handling": 65
+    },
+    {
+      "id": "nils_stanmore",
+      "club": "harbour_rovers",
+      "name": "Nils Stanmore",
+      "number": 2,
+      "position": "DF",
+      "age": 33,
+      "attributes": {
+        "vision": 40,
+        "passing": 48,
+        "dribbling": 51,
+        "finishing": 37,
+        "tackling": 69,
+        "pace": 60
+      },
+      "potential": 73
+    },
+    {
+      "id": "brix_hartnell",
+      "club": "harbour_rovers",
+      "name": "Brix Hartnell",
+      "number": 3,
+      "position": "DF",
+      "age": 32,
+      "attributes": {
+        "vision": 46,
+        "passing": 51,
+        "dribbling": 50,
+        "finishing": 34,
+        "tackling": 67,
+        "pace": 66
+      },
+      "potential": 68
+    },
+    {
+      "id": "hale_fairlie",
+      "club": "harbour_rovers",
+      "name": "Hale Fairlie",
+      "number": 4,
+      "position": "DF",
+      "age": 31,
+      "attributes": {
+        "vision": 40,
+        "passing": 55,
+        "dribbling": 46,
+        "finishing": 22,
+        "tackling": 70,
+        "pace": 59
+      },
+      "potential": 76
+    },
+    {
+      "id": "gus_quarry",
+      "club": "harbour_rovers",
+      "name": "Gus Quarry",
+      "number": 5,
+      "position": "DF",
+      "age": 19,
+      "attributes": {
+        "vision": 43,
+        "passing": 48,
+        "dribbling": 41,
+        "finishing": 28,
+        "tackling": 78,
+        "pace": 62
+      },
+      "potential": 84
+    },
+    {
+      "id": "ivo_zeller",
+      "club": "harbour_rovers",
+      "name": "Ivo Zeller",
+      "number": 12,
+      "position": "DF",
+      "age": 25,
+      "attributes": {
+        "vision": 50,
+        "passing": 56,
+        "dribbling": 49,
+        "finishing": 24,
+        "tackling": 66,
+        "pace": 56
+      },
+      "potential": 70
+    },
+    {
+      "id": "sven_yarrow",
+      "club": "harbour_rovers",
+      "name": "Sven Yarrow",
+      "number": 15,
+      "position": "DF",
+      "age": 34,
+      "attributes": {
+        "vision": 47,
+        "passing": 47,
+        "dribbling": 48,
+        "finishing": 33,
+        "tackling": 78,
+        "pace": 58
+      },
+      "potential": 84
+    },
+    {
+      "id": "arlo_easton",
+      "club": "harbour_rovers",
+      "name": "Arlo Easton",
+      "number": 6,
+      "position": "MF",
+      "age": 26,
+      "attributes": {
+        "vision": 64,
+        "passing": 74,
+        "dribbling": 61,
+        "finishing": 48,
+        "tackling": 57,
+        "pace": 61
+      },
+      "potential": 79,
+      "trait": "playmaker"
+    },
+    {
+      "id": "isak_lowell",
+      "club": "harbour_rovers",
+      "name": "Isak Lowell",
+      "number": 7,
+      "position": "MF",
+      "age": 32,
+      "attributes": {
+        "vision": 66,
+        "passing": 67,
+        "dribbling": 62,
+        "finishing": 56,
+        "tackling": 63,
+        "pace": 56
+      },
+      "potential": 67
+    },
+    {
+      "id": "jasper_garrow",
+      "club": "harbour_rovers",
+      "name": "Jasper Garrow",
+      "number": 8,
+      "position": "MF",
+      "age": 31,
+      "attributes": {
+        "vision": 63,
+        "passing": 65,
+        "dribbling": 57,
+        "finishing": 60,
+        "tackling": 56,
+        "pace": 61
+      },
+      "potential": 67
+    },
+    {
+      "id": "corin_birkett",
+      "club": "harbour_rovers",
+      "name": "Corin Birkett",
+      "number": 10,
+      "position": "MF",
+      "age": 23,
+      "attributes": {
+        "vision": 73,
+        "passing": 77,
+        "dribbling": 65,
+        "finishing": 60,
+        "tackling": 53,
+        "pace": 56
+      },
+      "potential": 78
+    },
+    {
+      "id": "vail_iverson",
+      "club": "harbour_rovers",
+      "name": "Vail Iverson",
+      "number": 14,
+      "position": "MF",
+      "age": 21,
+      "attributes": {
+        "vision": 75,
+        "passing": 64,
+        "dribbling": 64,
+        "finishing": 50,
+        "tackling": 54,
+        "pace": 54
+      },
+      "potential": 77
+    },
+    {
+      "id": "lorn_brandt",
+      "club": "harbour_rovers",
+      "name": "Lorn Brandt",
+      "number": 16,
+      "position": "MF",
+      "age": 28,
+      "attributes": {
+        "vision": 73,
+        "passing": 76,
+        "dribbling": 63,
+        "finishing": 45,
+        "tackling": 49,
+        "pace": 59
+      },
+      "potential": 78
+    },
+    {
+      "id": "kell_calloway",
+      "club": "harbour_rovers",
+      "name": "Kell Calloway",
+      "number": 9,
+      "position": "FW",
+      "age": 29,
+      "attributes": {
+        "vision": 64,
+        "passing": 52,
+        "dribbling": 64,
+        "finishing": 77,
+        "tackling": 26,
+        "pace": 78
+      },
+      "potential": 83,
+      "trait": "clinical"
+    },
+    {
+      "id": "wren_kimber",
+      "club": "harbour_rovers",
+      "name": "Wren Kimber",
+      "number": 11,
+      "position": "FW",
+      "age": 28,
+      "attributes": {
+        "vision": 64,
+        "passing": 52,
+        "dribbling": 63,
+        "finishing": 66,
+        "tackling": 37,
+        "pace": 75
+      },
+      "potential": 75
+    },
+    {
+      "id": "garrick_hadley",
+      "club": "harbour_rovers",
+      "name": "Garrick Hadley",
+      "number": 17,
+      "position": "FW",
+      "age": 23,
+      "attributes": {
+        "vision": 48,
+        "passing": 50,
+        "dribbling": 77,
+        "finishing": 68,
+        "tackling": 31,
+        "pace": 74
+      },
+      "potential": 77
+    },
+    {
+      "id": "bram_kestrel",
+      "club": "harbour_rovers",
+      "name": "Bram Kestrel",
+      "number": 18,
+      "position": "FW",
+      "age": 30,
+      "attributes": {
+        "vision": 50,
+        "passing": 62,
+        "dribbling": 73,
+        "finishing": 67,
+        "tackling": 26,
+        "pace": 74
+      },
+      "potential": 74
+    },
+    {
+      "id": "rafe_whitlock",
+      "club": "vale_united",
+      "name": "Rafe Whitlock",
+      "number": 1,
+      "position": "GK",
+      "age": 31,
+      "attributes": {
+        "vision": 49,
+        "passing": 41,
+        "dribbling": 32,
+        "finishing": 9,
+        "tackling": 39,
+        "pace": 34
+      },
+      "potential": 52,
+      "handling": 80
+    },
+    {
+      "id": "cato_aldous",
+      "club": "vale_united",
+      "name": "Cato Aldous",
+      "number": 13,
+      "position": "GK",
+      "age": 32,
+      "attributes": {
+        "vision": 34,
+        "passing": 41,
+        "dribbling": 21,
+        "finishing": 11,
+        "tackling": 27,
+        "pace": 42
+      },
+      "potential": 47,
+      "handling": 72
+    },
+    {
+      "id": "eko_rowntree",
+      "club": "vale_united",
+      "name": "Eko Rowntree",
+      "number": 2,
+      "position": "DF",
+      "age": 19,
+      "attributes": {
+        "vision": 49,
+        "passing": 58,
+        "dribbling": 48,
+        "finishing": 33,
+        "tackling": 63,
+        "pace": 67
+      },
+      "potential": 69
+    },
+    {
+      "id": "jory_norcott",
+      "club": "vale_united",
+      "name": "Jory Norcott",
+      "number": 3,
+      "position": "DF",
+      "age": 34,
+      "attributes": {
+        "vision": 39,
+        "passing": 59,
+        "dribbling": 34,
+        "finishing": 26,
+        "tackling": 64,
+        "pace": 66
+      },
+      "potential": 68
+    },
+    {
+      "id": "oren_ingram",
+      "club": "vale_united",
+      "name": "Oren Ingram",
+      "number": 4,
+      "position": "DF",
+      "age": 24,
+      "attributes": {
+        "vision": 37,
+        "passing": 55,
+        "dribbling": 43,
+        "finishing": 23,
+        "tackling": 67,
+        "pace": 67
+      },
+      "potential": 73
+    },
+    {
+      "id": "dane_fallow",
+      "club": "vale_united",
+      "name": "Dane Fallow",
+      "number": 5,
+      "position": "DF",
+      "age": 27,
+      "attributes": {
+        "vision": 47,
+        "passing": 58,
+        "dribbling": 49,
+        "finishing": 26,
+        "tackling": 71,
+        "pace": 63
+      },
+      "potential": 72
+    },
+    {
+      "id": "fenn_gresham",
+      "club": "vale_united",
+      "name": "Fenn Gresham",
+      "number": 12,
+      "position": "DF",
+      "age": 25,
+      "attributes": {
+        "vision": 50,
+        "passing": 50,
+        "dribbling": 40,
+        "finishing": 31,
+        "tackling": 68,
+        "pace": 61
+      },
+      "potential": 69
+    },
+    {
+      "id": "tomas_corvin",
+      "club": "vale_united",
+      "name": "Tomas Corvin",
+      "number": 15,
+      "position": "DF",
+      "age": 24,
+      "attributes": {
+        "vision": 41,
+        "passing": 59,
+        "dribbling": 45,
+        "finishing": 20,
+        "tackling": 63,
+        "pace": 59
+      },
+      "potential": 63
+    },
+    {
+      "id": "ulric_varley",
+      "club": "vale_united",
+      "name": "Ulric Varley",
+      "number": 6,
+      "position": "MF",
+      "age": 34,
+      "attributes": {
+        "vision": 71,
+        "passing": 74,
+        "dribbling": 61,
+        "finishing": 47,
+        "tackling": 58,
+        "pace": 63
+      },
+      "potential": 79,
+      "trait": "playmaker"
+    },
+    {
+      "id": "pavo_ashby",
+      "club": "vale_united",
+      "name": "Pavo Ashby",
+      "number": 7,
+      "position": "MF",
+      "age": 20,
+      "attributes": {
+        "vision": 67,
+        "passing": 73,
+        "dribbling": 63,
+        "finishing": 43,
+        "tackling": 46,
+        "pace": 59
+      },
+      "potential": 78
+    },
+    {
+      "id": "quill_pemberton",
+      "club": "vale_united",
+      "name": "Quill Pemberton",
+      "number": 8,
+      "position": "MF",
+      "age": 33,
+      "attributes": {
+        "vision": 65,
+        "passing": 70,
+        "dribbling": 62,
+        "finishing": 41,
+        "tackling": 49,
+        "pace": 63
+      },
+      "potential": 71
+    },
+    {
+      "id": "ansel_jessop",
+      "club": "vale_united",
+      "name": "Ansel Jessop",
+      "number": 10,
+      "position": "MF",
+      "age": 33,
+      "attributes": {
+        "vision": 57,
+        "passing": 67,
+        "dribbling": 60,
+        "finishing": 45,
+        "tackling": 46,
+        "pace": 54
+      },
+      "potential": 67
+    },
+    {
+      "id": "finn_jarrow",
+      "club": "vale_united",
+      "name": "Finn Jarrow",
+      "number": 14,
+      "position": "MF",
+      "age": 24,
+      "attributes": {
+        "vision": 68,
+        "passing": 61,
+        "dribbling": 59,
+        "finishing": 47,
+        "tackling": 60,
+        "pace": 59
+      },
+      "potential": 73
+    },
+    {
+      "id": "maks_oakley",
+      "club": "vale_united",
+      "name": "Maks Oakley",
+      "number": 16,
+      "position": "MF",
+      "age": 30,
+      "attributes": {
+        "vision": 57,
+        "passing": 74,
+        "dribbling": 54,
+        "finishing": 46,
+        "tackling": 52,
+        "pace": 59
+      },
+      "potential": 78
+    },
+    {
+      "id": "hollis_marlow",
+      "club": "vale_united",
+      "name": "Hollis Marlow",
+      "number": 9,
+      "position": "FW",
+      "age": 32,
+      "attributes": {
+        "vision": 61,
+        "passing": 61,
+        "dribbling": 64,
+        "finishing": 75,
+        "tackling": 26,
+        "pace": 63
+      },
+      "potential": 80,
+      "trait": "clinical"
+    },
+    {
+      "id": "kasim_draycott",
+      "club": "vale_united",
+      "name": "Kasim Draycott",
+      "number": 11,
+      "position": "FW",
+      "age": 31,
+      "attributes": {
+        "vision": 57,
+        "passing": 49,
+        "dribbling": 73,
+        "finishing": 77,
+        "tackling": 25,
+        "pace": 61
+      },
+      "potential": 81
+    },
+    {
+      "id": "emrys_underhill",
+      "club": "vale_united",
+      "name": "Emrys Underhill",
+      "number": 17,
+      "position": "FW",
+      "age": 22,
+      "attributes": {
+        "vision": 61,
+        "passing": 55,
+        "dribbling": 73,
+        "finishing": 73,
+        "tackling": 25,
+        "pace": 64
+      },
+      "potential": 74
+    },
+    {
+      "id": "dov_elmore",
+      "club": "vale_united",
+      "name": "Dov Elmore",
+      "number": 18,
+      "position": "FW",
+      "age": 19,
+      "attributes": {
+        "vision": 52,
+        "passing": 57,
+        "dribbling": 61,
+        "finishing": 72,
+        "tackling": 29,
+        "pace": 69
+      },
+      "potential": 74
+    }
+  ]
+}
