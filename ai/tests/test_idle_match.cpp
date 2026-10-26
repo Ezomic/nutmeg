@@ -13,6 +13,9 @@ namespace {
 
 constexpr int kTicks = 60 * 60;
 
+// Pinned above every player so the shape is measured against a ball nobody can play.
+constexpr float kHeldAloft = 5.0f;
+
 struct Run {
     std::uint64_t hash = 0;
     ShapeMetrics home;
@@ -37,6 +40,8 @@ Run play(Formation home, Formation away, Mentality homeMentality, Mentality away
         gameplay::PlayerInputs inputs{};
         drive(world, Side::Home, home, homeMentality, control, inputs);
         drive(world, Side::Away, away, awayMentality, control, inputs);
+        world.ball() = physics::Ball{};
+        world.ball().position.z = kHeldAloft;
         world.step(inputs);
     }
     run.hash = world.hash();
