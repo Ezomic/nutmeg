@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schema/manifest.schema.json",
+  "format": 1,
+  "id": "sample_fictional",
+  "name": "Sample Fictional Pack",
+  "description": "Two invented clubs with full squads, used as the reference pack and as a validation fixture.",
+  "author": "Nutmeg contributors",
+  "licence": "CC0-1.0",
+  "version": "1.0.0",
+  "contains_real_names": false,
+  "contains_real_badges": false
+}

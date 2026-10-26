@@ -1,0 +1,324 @@
+{
+  "schema_version": 1,
+  "description": "Realism bands inherited from the Pitch PHP harness (RealismReport, LeagueReport). Bands are rough top-division figures to calibrate toward, not hard limits. See docs/realism.md.",
+  "reference_setup": {
+    "match_batch": {
+      "seeds": 200,
+      "seed_range": "1..N",
+      "rating_home": 72,
+      "rating_away": 72,
+      "note": "evenly rated sides, all six attributes equal"
+    },
+    "paired_check": {
+      "sigmas": 3.0,
+      "note": "a known-off metric fails only when it moves outwards by more than sigmas times the standard error of the per-seed difference against the recorded baseline"
+    }
+  },
+  "known_off_semantics": "known_off is the Nutmeg engine's status and is false for every metric until a baseline is blessed on purpose. php_known_off and php_last_measured record where the PHP engine stood and are history, not targets.",
+  "metrics": [
+    {
+      "id": "goals_per_match",
+      "label": "Goals",
+      "scope": "match",
+      "definition": "Goals scored by both sides combined, per match.",
+      "low": 2.4,
+      "high": 3.2,
+      "unit": "per_match",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": null,
+      "band_origin": "given",
+      "aggregation": "mean_per_match",
+      "needs": [
+        "goal"
+      ]
+    },
+    {
+      "id": "shots_per_match",
+      "label": "Shots",
+      "scope": "match",
+      "definition": "Attempts on goal by both sides combined (feet and headers), per match.",
+      "low": 22.0,
+      "high": 30.0,
+      "unit": "per_match",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": null,
+      "band_origin": "given",
+      "aggregation": "mean_per_match",
+      "needs": [
+        "shot"
+      ]
+    },
+    {
+      "id": "shots_on_target_per_match",
+      "label": "Shots on target",
+      "scope": "match",
+      "definition": "Shots that scored or were saved by the keeper, both sides combined, per match. Blocked and off-target shots do not count.",
+      "low": 7.5,
+      "high": 11.0,
+      "unit": "per_match",
+      "known_off": false,
+      "php_known_off": true,
+      "php_last_measured": 12.4,
+      "band_origin": "given",
+      "aggregation": "mean_per_match",
+      "needs": [
+        "shot.outcome"
+      ]
+    },
+    {
+      "id": "shot_conversion_pct",
+      "label": "Shot conversion %",
+      "scope": "match",
+      "definition": "Goals divided by shots over the whole batch, as a percentage.",
+      "low": 9.0,
+      "high": 14.0,
+      "unit": "percent",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": null,
+      "band_origin": "given",
+      "aggregation": "pooled",
+      "needs": [
+        "goal",
+        "shot"
+      ]
+    },
+    {
+      "id": "pass_completion_pct",
+      "label": "Pass completion %",
+      "scope": "match",
+      "definition": "Completed passes divided by attempted passes over the whole batch, as a percentage. Crosses are not passes.",
+      "low": 70.0,
+      "high": 88.0,
+      "unit": "percent",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": null,
+      "band_origin": "given",
+      "aggregation": "pooled",
+      "needs": [
+        "pass.success"
+      ]
+    },
+    {
+      "id": "crosses_per_match",
+      "label": "Crosses",
+      "scope": "match",
+      "definition": "Crosses attempted by both sides combined, per match.",
+      "low": 14.0,
+      "high": 42.0,
+      "unit": "per_match",
+      "known_off": false,
+      "php_known_off": true,
+      "php_last_measured": 13.9,
+      "band_origin": "given",
+      "aggregation": "mean_per_match",
+      "needs": [
+        "cross"
+      ]
+    },
+    {
+      "id": "fouls_per_match",
+      "label": "Fouls",
+      "scope": "match",
+      "definition": "Fouls committed by both sides combined, per match. Cards are not counted.",
+      "low": 18.0,
+      "high": 28.0,
+      "unit": "per_match",
+      "known_off": false,
+      "php_known_off": true,
+      "php_last_measured": 11.6,
+      "band_origin": "given",
+      "aggregation": "mean_per_match",
+      "needs": [
+        "foul"
+      ]
+    },
+    {
+      "id": "corners_per_match",
+      "label": "Corners",
+      "scope": "match",
+      "definition": "Corner kicks awarded to both sides combined, per match.",
+      "low": 8.0,
+      "high": 12.0,
+      "unit": "per_match",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": null,
+      "band_origin": "given",
+      "aggregation": "mean_per_match",
+      "needs": [
+        "corner"
+      ]
+    },
+    {
+      "id": "home_possession_pct",
+      "label": "Home possession %",
+      "scope": "match",
+      "definition": "Share of samples in which the home side is the side in possession, over the whole batch. With evenly rated sides this is also a symmetry check.",
+      "low": 45.0,
+      "high": 55.0,
+      "unit": "percent",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": null,
+      "band_origin": "given",
+      "aggregation": "pooled",
+      "needs": [
+        "sample.possession"
+      ]
+    },
+    {
+      "id": "final_third_time_pct",
+      "label": "Final-third time %",
+      "scope": "match",
+      "definition": "Share of samples in which the ball is in the final third of the side in possession (advance above 0.66 up that side's attacking axis), over the whole batch.",
+      "low": 12.0,
+      "high": 30.0,
+      "unit": "percent",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": null,
+      "band_origin": "given",
+      "aggregation": "pooled",
+      "needs": [
+        "sample.possession",
+        "sample.ball"
+      ]
+    },
+    {
+      "id": "league_goals_per_game",
+      "label": "Goals per game",
+      "scope": "league",
+      "definition": "Goals per fixture across a round-robin of a fixed, varied division.",
+      "low": 2.4,
+      "high": 3.2,
+      "unit": "per_match",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": 2.6,
+      "band_origin": "given",
+      "aggregation": "mean_per_match",
+      "needs": [
+        "goal",
+        "fixture.sides"
+      ]
+    },
+    {
+      "id": "league_home_wins_pct",
+      "label": "Home wins %",
+      "scope": "league",
+      "definition": "Share of fixtures won by the home side.",
+      "low": 40.0,
+      "high": 50.0,
+      "unit": "percent",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": 46.7,
+      "band_origin": "given",
+      "aggregation": "pooled",
+      "needs": [
+        "fixture.score"
+      ]
+    },
+    {
+      "id": "league_draws_pct",
+      "label": "Draws %",
+      "scope": "league",
+      "definition": "Share of fixtures that finish level.",
+      "low": 22.0,
+      "high": 30.0,
+      "unit": "percent",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": 23.6,
+      "band_origin": "given",
+      "aggregation": "pooled",
+      "needs": [
+        "fixture.score"
+      ]
+    },
+    {
+      "id": "league_away_wins_pct",
+      "label": "Away wins %",
+      "scope": "league",
+      "definition": "Share of fixtures won by the away side.",
+      "low": 24.0,
+      "high": 34.0,
+      "unit": "percent",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": 29.8,
+      "band_origin": "given",
+      "aggregation": "pooled",
+      "needs": [
+        "fixture.score"
+      ]
+    },
+    {
+      "id": "league_goalless_pct",
+      "label": "Goalless %",
+      "scope": "league",
+      "definition": "Share of fixtures that finish 0-0.",
+      "low": 4.0,
+      "high": 14.0,
+      "unit": "percent",
+      "known_off": false,
+      "php_known_off": true,
+      "php_last_measured": 14.8,
+      "band_origin": "given",
+      "aggregation": "pooled",
+      "needs": [
+        "fixture.score"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "id": "shape_line_height",
+      "scope": "shape",
+      "definition": "Mean advance of the back four outfield players up their own attacking axis, from mean positions over a batch.",
+      "unit": "fraction_of_pitch",
+      "low": null,
+      "high": null,
+      "needs": [
+        "sample.players"
+      ]
+    },
+    {
+      "id": "shape_length",
+      "scope": "shape",
+      "definition": "Mean advance of the most advanced outfield player minus the deepest.",
+      "unit": "fraction_of_pitch",
+      "low": null,
+      "high": null,
+      "needs": [
+        "sample.players"
+      ]
+    },
+    {
+      "id": "shape_width",
+      "scope": "shape",
+      "definition": "Mean lateral spread of the outfield players (max y minus min y).",
+      "unit": "fraction_of_pitch",
+      "low": null,
+      "high": null,
+      "needs": [
+        "sample.players"
+      ]
+    },
+    {
+      "id": "shape_compactness",
+      "scope": "shape",
+      "definition": "Shape length times shape width.",
+      "unit": "fraction_of_pitch_squared",
+      "low": null,
+      "high": null,
+      "needs": [
+        "sample.players"
+      ]
+    }
+  ]
+}

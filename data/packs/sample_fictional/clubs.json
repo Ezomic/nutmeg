@@ -1,0 +1,47 @@
+{
+  "$schema": "../../schema/clubs.schema.json",
+  "clubs": [
+    {
+      "id": "harbour_rovers",
+      "name": "Harbour Rovers",
+      "short_name": "HRV",
+      "city": "Saltmere",
+      "stadium": "Quayside Park",
+      "division": 1,
+      "formation": "433",
+      "mentality": "attacking",
+      "keeping": 72,
+      "set_pieces": 64,
+      "rivals": [
+        "vale_united"
+      ],
+      "badge": "harbour_badge",
+      "kits": {
+        "home": "harbour_blue",
+        "away": "harbour_white",
+        "goalkeeper": "keeper_green"
+      }
+    },
+    {
+      "id": "vale_united",
+      "name": "Vale United",
+      "short_name": "VLU",
+      "city": "Greenvale",
+      "stadium": "Millrace Ground",
+      "division": 1,
+      "formation": "442",
+      "mentality": "balanced",
+      "keeping": 68,
+      "set_pieces": 64,
+      "rivals": [
+        "harbour_rovers"
+      ],
+      "badge": "vale_badge",
+      "kits": {
+        "home": "vale_red",
+        "away": "vale_gold",
+        "goalkeeper": "keeper_green"
+      }
+    }
+  ]
+}
