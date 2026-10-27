@@ -52,6 +52,7 @@ public:
     // True from the tick the ball goes out or into the goal until it is back in play.
     bool ballDead() const { return ballDead_; }
     const Referee& referee() const { return referee_; }
+    Referee& referee() { return referee_; }
     // The restart awaiting its taker: kickoff, throw-in, goal kick, corner,
     // free kick or penalty. The ball is held on the spot, and only the taking
     // side may kick it, until it is kicked. `taker` is the player stood at it.
@@ -61,6 +62,8 @@ public:
     const std::optional<Restart>& pendingRestart() const { return pending_; }
     // Restarts play with a kickoff for `side`, as at the start of a match.
     void kickoff(physics::Side side);
+    // Puts every player still on the pitch back in the opening 4-4-2.
+    void resetShape();
     // Stops play and sets up `restart` at once.
     void restartPlay(Restart restart);
     // What happened in the most recent step.

@@ -135,6 +135,7 @@ TEST_CASE("only the controlled player moves under a human input")
     NullPlatform platform;
     platform.init({});
     Simulation sim(5);
+    sim.tick({});
     const gameplay::World before = sim.world();
     DriverOptions options;
     options.maxTicks = 120;

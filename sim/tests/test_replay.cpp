@@ -13,18 +13,18 @@ namespace {
 constexpr std::size_t kShooter = Simulation::kControlledPlayer;
 constexpr std::uint64_t kShotTicks = 400;
 
-// Home's number 10 stands 25 m out with the ball and shoots on the second frame.
+// The match starts, then Home is given a free kick at the spot; the shooter's stick input is
+// a long shot, and the lifecycle takes the kick itself if nobody does.
 Simulation stagedShot(std::uint64_t seed, float shooterY, float shooterX = 28.0f)
 {
     Simulation sim(seed);
-    gameplay::Player& p = sim.world().players()[kShooter];
-    p.position = {shooterX, shooterY};
-    p.velocity = {};
-    p.facing = 0.0f;
-    sim.world().ball().position = {shooterX + 0.45f, shooterY, physics::ball::kRadius};
-    sim.world().ball().velocity = {};
-    sim.world().ball().spin = {};
     sim.tick(InputFrame{});
+    gameplay::Restart restart;
+    restart.kind = gameplay::RestartKind::DirectFreeKick;
+    restart.side = physics::Side::Home;
+    restart.spot = {shooterX, shooterY};
+    sim.world().players()[kShooter].position = restart.spot;
+    sim.world().restartPlay(restart);
     return sim;
 }
 
@@ -165,22 +165,22 @@ TEST_CASE("a shot that leaves over the attacked goal line is a near miss, anythi
     };
 
     const std::vector<gameplay::MatchEvent> wide = {event(EventKind::Shot, 1000, 10), event(EventKind::OutOfPlay, 1040, 10, physics::Line::GoalLinePlusX)};
-    const auto found = detectHighlights(wide, 500, 2000);
+    const auto found = detectHighlights(wide, 2000);
     REQUIRE(kinds(found) == std::vector{HighlightKind::NearMiss});
-    REQUIRE(found[0].at == 540);
-    REQUIRE(found[0].begin == 240);
-    REQUIRE(found[0].end == 720);
+    REQUIRE(found[0].at == 1040);
+    REQUIRE(found[0].begin == 740);
+    REQUIRE(found[0].end == 1220);
 
     const std::vector<gameplay::MatchEvent> ownEnd = {event(EventKind::Shot, 1000, 10), event(EventKind::OutOfPlay, 1040, 10, physics::Line::GoalLineMinusX)};
-    REQUIRE(detectHighlights(ownEnd, 0, 2000).empty());
+    REQUIRE(detectHighlights(ownEnd, 2000).empty());
     const std::vector<gameplay::MatchEvent> touchline = {event(EventKind::Shot, 1000, 10), event(EventKind::OutOfPlay, 1040, 10, physics::Line::TouchlinePlusY)};
-    REQUIRE(detectHighlights(touchline, 0, 2000).empty());
+    REQUIRE(detectHighlights(touchline, 2000).empty());
     const std::vector<gameplay::MatchEvent> late = {event(EventKind::Shot, 1000, 10), event(EventKind::OutOfPlay, 1500, 10, physics::Line::GoalLinePlusX)};
-    REQUIRE(detectHighlights(late, 0, 2000).empty());
+    REQUIRE(detectHighlights(late, 2000).empty());
     const std::vector<gameplay::MatchEvent> awayShot = {event(EventKind::Shot, 1000, 15), event(EventKind::OutOfPlay, 1040, 15, physics::Line::GoalLineMinusX)};
-    REQUIRE(kinds(detectHighlights(awayShot, 0, 2000)) == std::vector{HighlightKind::NearMiss});
+    REQUIRE(kinds(detectHighlights(awayShot, 2000)) == std::vector{HighlightKind::NearMiss});
     const std::vector<gameplay::MatchEvent> parried = {event(EventKind::Shot, 1000, 10), event(EventKind::Save, 1020, 0), event(EventKind::OutOfPlay, 1040, 10, physics::Line::GoalLinePlusX)};
-    REQUIRE(kinds(detectHighlights(parried, 0, 2000)) == std::vector{HighlightKind::Save});
+    REQUIRE(kinds(detectHighlights(parried, 2000)) == std::vector{HighlightKind::Save});
 }
 
 TEST_CASE("a window past the end is clamped and a quiet run has no highlights")

@@ -63,6 +63,8 @@ public:
 
     int yellowCards(std::uint32_t player) const { return yellows_[player]; }
     bool sentOff(std::uint32_t player) const { return sentOff_[player] != 0; }
+    // Swaps the disciplinary record of two player slots, as when the teams change ends.
+    void exchange(std::uint32_t a, std::uint32_t b);
     bool advantageActive() const { return advantage_.active; }
     std::uint64_t hash() const;
 

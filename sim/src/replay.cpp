@@ -10,7 +10,6 @@ using gameplay::MatchEvent;
 MatchRecording::MatchRecording(const Simulation& start, InputStream inputs, std::uint64_t keyframeInterval)
     : inputs_(std::move(inputs))
     , interval_(std::max<std::uint64_t>(keyframeInterval, 1))
-    , baseTick_(start.world().tick())
 {
     Simulation sim = start;
     hashes_.reserve(inputs_.size() + 1);
@@ -18,7 +17,10 @@ MatchRecording::MatchRecording(const Simulation& start, InputStream inputs, std:
     hashes_.push_back(keyframes_.back().hash);
     for (std::uint64_t i = 0; i < inputs_.size(); ++i) {
         sim.tick(inputs_.at(i));
-        events_.insert(events_.end(), sim.world().events().begin(), sim.world().events().end());
+        for (gameplay::MatchEvent event : sim.world().events()) {
+            event.tick = i + 1;
+            events_.push_back(event);
+        }
         hashes_.push_back(sim.stateHash());
         if ((i + 1) % interval_ == 0) {
             keyframes_.push_back({i + 1, sim, hashes_.back()});
@@ -29,11 +31,6 @@ MatchRecording::MatchRecording(const Simulation& start, InputStream inputs, std:
 const Keyframe& MatchRecording::keyframeFor(std::uint64_t index) const
 {
     return keyframes_[std::min<std::uint64_t>(index / interval_, keyframes_.size() - 1)];
-}
-
-std::uint64_t MatchRecording::indexOf(const MatchEvent& event) const
-{
-    return std::min(event.tick > baseTick_ ? event.tick - baseTick_ : 0, size());
 }
 
 namespace {
@@ -52,14 +49,14 @@ bool isDecisive(EventKind kind)
 
 std::vector<Highlight> detectHighlights(const MatchRecording& recording, const HighlightOptions& options)
 {
-    return detectHighlights(recording.events(), recording.baseTick(), recording.size(), options);
+    return detectHighlights(recording.events(), recording.size(), options);
 }
 
-std::vector<Highlight> detectHighlights(const std::vector<MatchEvent>& events, std::uint64_t baseTick, std::uint64_t length, const HighlightOptions& options)
+std::vector<Highlight> detectHighlights(const std::vector<MatchEvent>& events, std::uint64_t length, const HighlightOptions& options)
 {
     std::vector<Highlight> found;
     const auto add = [&](HighlightKind kind, const MatchEvent& event) {
-        const std::uint64_t at = std::min(event.tick > baseTick ? event.tick - baseTick : 0, length);
+        const std::uint64_t at = std::min(event.tick, length);
         found.push_back({kind, at, at > options.leadTicks ? at - options.leadTicks : 0, std::min(at + options.tailTicks, length)});
     };
 

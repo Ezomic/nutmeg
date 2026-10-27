@@ -33,18 +33,15 @@ public:
     const std::vector<Keyframe>& keyframes() const { return keyframes_; }
     // The last keyframe at or before `index`.
     const Keyframe& keyframeFor(std::uint64_t index) const;
-    // Every event of the run, in order; `tick` is the world tick.
+    // Every event of the run, in order; `tick` is rewritten to the stream index
+    // the event was seen at, since the world may not tick while play is paused.
     const std::vector<gameplay::MatchEvent>& events() const { return events_; }
-    // The stream index an event happened at.
-    std::uint64_t indexOf(const gameplay::MatchEvent& event) const;
-    std::uint64_t baseTick() const { return baseTick_; }
     // The state hash after `index` ticks; index 0 is the start state.
     std::uint64_t hashAt(std::uint64_t index) const { return hashes_[index]; }
 
 private:
     InputStream inputs_;
     std::uint64_t interval_;
-    std::uint64_t baseTick_;
     std::vector<Keyframe> keyframes_;
     std::vector<std::uint64_t> hashes_;
     std::vector<gameplay::MatchEvent> events_;
@@ -68,9 +65,9 @@ struct HighlightOptions {
 };
 
 // Goals, saves and shots that went out over the goal line, in event order.
-// `events` carry world ticks; `baseTick` is the world tick of stream index 0
-// and `length` the number of ticks in the stream.
-std::vector<Highlight> detectHighlights(const std::vector<gameplay::MatchEvent>& events, std::uint64_t baseTick, std::uint64_t length, const HighlightOptions& options = {});
+// `events` carry stream indices as their ticks and `length` is the number of
+// ticks in the stream.
+std::vector<Highlight> detectHighlights(const std::vector<gameplay::MatchEvent>& events, std::uint64_t length, const HighlightOptions& options = {});
 std::vector<Highlight> detectHighlights(const MatchRecording& recording, const HighlightOptions& options = {});
 
 // Re-runs a window of a recording one tick at a time and exposes the world
