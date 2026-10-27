@@ -85,4 +85,23 @@ TeamIntent drive(const gameplay::World& world, Side side, Formation formation, M
     return intent;
 }
 
+TeamIntent drive(const gameplay::World& world, Side side, Formation formation, Mentality mentality, BallControl control,
+    gameplay::PlayerInputs& inputs, gameplay::PlayerActions& actions, Decider& decider)
+{
+    const TeamIntent intent = drive(world, side, formation, mentality, control, inputs);
+    const std::uint32_t chaser = looseBallChaser(world, side);
+    if (chaser != gameplay::kNoPlayer) {
+        inputs[chaser] = moveToward(world.players()[chaser], {physics::xy(world.ball().position), tuning::kPressUrgency});
+    }
+    const CarrierPlan plan = decider.plan(world, side);
+    if (plan.player == gameplay::kNoPlayer) {
+        return intent;
+    }
+    actions[plan.player] = plan.request;
+    if (plan.steer) {
+        inputs[plan.player] = moveToward(world.players()[plan.player], {plan.destination, tuning::kSprintUrgency});
+    }
+    return intent;
+}
+
 }
