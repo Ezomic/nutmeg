@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nutmeg/ai/decision.h"
 #include "nutmeg/ai/team_shape.h"
 #include "nutmeg/core/input.h"
 #include "nutmeg/gameplay/world.h"
@@ -18,5 +19,11 @@ TeamInput inputFor(const gameplay::World& world, physics::Side side, Formation f
 
 // Plans `side` and writes its ten outfielders' inputs. The keeper is left alone.
 TeamIntent drive(const gameplay::World& world, physics::Side side, Formation formation, Mentality mentality, BallControl control, gameplay::PlayerInputs& inputs);
+
+
+// As above, then lets `side`'s ball carrier decide: it kicks through `actions`,
+// or steers with `inputs` when the decision is to dribble or hold.
+TeamIntent drive(const gameplay::World& world, physics::Side side, Formation formation, Mentality mentality, BallControl control,
+    gameplay::PlayerInputs& inputs, gameplay::PlayerActions& actions, Decider& decider);
 
 }
