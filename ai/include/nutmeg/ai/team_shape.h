@@ -26,6 +26,8 @@ struct TeamInput {
     std::array<physics::Vec2, kOutfielders> opponents{};
     // World x of the opponent's offside line; attackers stay level with it.
     std::optional<float> offsideLineX;
+    // Multiplies how far a player will go to press the ball.
+    float pressScale = 1.0f;
 };
 
 struct PlayerTarget {

@@ -1,5 +1,7 @@
 #include "nutmeg/ai/bot.h"
 
+#include "nutmeg/ai/setpiece.h"
+
 #include <algorithm>
 
 namespace nutmeg::ai {
@@ -81,6 +83,34 @@ TeamIntent drive(const gameplay::World& world, Side side, Formation formation, M
     const std::size_t own = firstIndex(side);
     for (std::size_t i = 0; i < kOutfielders; ++i) {
         inputs[own + 1 + i] = moveToward(world.players()[own + 1 + i], intent.targets[i]);
+    }
+    return intent;
+}
+
+TeamIntent drive(const gameplay::World& world, Side side, Formation formation, Mentality mentality, BallControl control,
+    gameplay::PlayerInputs& inputs, gameplay::PlayerActions& actions, Decider& decider)
+{
+    const TeamIntent intent = drive(world, side, formation, mentality, control, inputs);
+    const std::optional<gameplay::Restart>& restart = world.restart();
+    if (restart && restart->side == side) {
+        positionForRestart(world, *restart, inputs);
+        if (restart->taker < gameplay::kPlayerCount) {
+            inputs[restart->taker] = {};
+            actions[restart->taker] = planRestart(world, *restart);
+        }
+        return intent;
+    }
+    const std::uint32_t chaser = restart ? gameplay::kNoPlayer : looseBallChaser(world, side);
+    if (chaser != gameplay::kNoPlayer) {
+        inputs[chaser] = moveToward(world.players()[chaser], {physics::xy(world.ball().position), tuning::kPressUrgency});
+    }
+    const CarrierPlan plan = decider.plan(world, side);
+    if (plan.player == gameplay::kNoPlayer) {
+        return intent;
+    }
+    actions[plan.player] = plan.request;
+    if (plan.steer) {
+        inputs[plan.player] = moveToward(world.players()[plan.player], {plan.destination, tuning::kSprintUrgency});
     }
     return intent;
 }

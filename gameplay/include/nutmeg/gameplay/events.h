@@ -18,6 +18,12 @@ enum class EventKind : std::uint8_t {
     OutOfPlay,    // side and player: the last team and player to touch the ball
     Save,         // player: the keeper, other: the shooter; value: 1 if held, 0 if parried
     Claim,        // player: the keeper; value: 1 if held, 0 if fumbled or punched away
+    Foul,         // player: the fouler, other: the victim; value: 1 if advantage is being played
+    YellowCard,   // player and side: who was booked; value: their yellow cards so far
+    RedCard,      // player and side: who was sent off; value: 1 for a straight red, 2 for a second yellow
+    Offside,      // player: the offside attacker, other: the player who played the ball
+    AdvantageGiven, // player: the fouler, other: the victim
+    AdvantageEnded, // value: 1 if the fouled team kept the advantage, 0 if the foul is called back
 };
 
 struct MatchEvent {

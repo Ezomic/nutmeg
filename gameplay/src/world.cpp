@@ -4,6 +4,7 @@
 #include "nutmeg/core/dmath.h"
 #include "nutmeg/core/hash.h"
 #include "nutmeg/gameplay/locomotion.h"
+#include "nutmeg/gameplay/setpiece.h"
 
 #include <algorithm>
 
@@ -159,6 +160,7 @@ World::World(std::uint64_t seed)
 
 World::World(const std::array<schema::PlayerProfile, kPlayerCount>& profiles, std::uint64_t seed)
     : rng_(Rng(seed).derive("possession"))
+    , referee_(Rng(seed).derive("referee"), kPlayerCount)
     , keepers_(Rng(seed).derive("keeper"))
 {
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
@@ -187,6 +189,9 @@ void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
 
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
+        if (p.sentOff) {
+            continue;
+        }
         if (p.cooldown > 0) {
             --p.cooldown;
         }
@@ -196,21 +201,38 @@ void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
     }
     separate(players_);
     for (Player& p : players_) {
-        clampToPitch(p);
+        if (!p.sentOff) {
+            clampToPitch(p);
+        }
+    }
+    if (restart_) {
+        setpiece::keepClear(players_.data(), kPlayerCount, *restart_);
     }
 
     if (possessor_ != kNoPlayer) {
         attachBall(players_[possessor_]);
     }
+    if (restart_) {
+        ball_.position = {restart_->spot.x, restart_->spot.y, physics::ball::kRadius};
+        ball_.velocity = {};
+        ball_.spin = {};
+    }
     if (!ballDead_) {
         resolveActions(requests);
-        if (possessor_ == kNoPlayer) {
+        if (possessor_ == kNoPlayer && !restart_) {
             resolveLooseBall();
         }
     }
     keepers_.resolve(keeperSituation());
+    if (restart_ && physics::length(ball_.velocity) > 0.0f) {
+        restart_.reset();
+    }
     ball_.step();
     checkBallStatus();
+    review();
+    if (pending_ && tick_ >= pendingAt_) {
+        applyRestart(*pending_);
+    }
     ++tick_;
 }
 
@@ -231,12 +253,84 @@ void World::collectRequests(const PlayerInputs& inputs, const PlayerActions& act
 void World::emit(MatchEvent event)
 {
     event.tick = tick_;
+    const bool touch = event.kind == EventKind::Touch || event.kind == EventKind::Pass || event.kind == EventKind::Shot;
+    if (touch && event.player != indirectTaker_) {
+        indirectTaker_ = kNoPlayer;
+    }
     events_.push_back(event);
 }
 
 KeeperSituation World::keeperSituation()
 {
     return {players_, ball_, possessor_, lastToucher_, ballDead_, tick_, events_};
+}
+
+void World::review()
+{
+    const Situation situation{players_.data(), kPlayerCount, possessor_, tick_, offsideExempt_};
+    offsideExempt_ = false;
+    const std::optional<Restart> restart = referee_.review(situation, events_);
+    for (const MatchEvent& event : events_) {
+        if (event.kind == EventKind::RedCard) {
+            sendOff(players_[event.player]);
+        }
+    }
+    if (restart) {
+        applyRestart(*restart);
+    } else {
+        scheduleRestart();
+    }
+}
+
+void World::scheduleRestart()
+{
+    for (const MatchEvent& event : events_) {
+        if (const std::optional<Restart> next = setpiece::restartAfter(event, physics::xy(ball_.position))) {
+            pending_ = next;
+            pendingAt_ = tick_ + setpiece::kDeadBallTicks;
+        }
+    }
+}
+
+void World::kickoff(Side side)
+{
+    applyRestart({RestartKind::Kickoff, side, {0.0f, 0.0f}});
+}
+
+void World::restartPlay(Restart restart)
+{
+    applyRestart(restart);
+}
+
+void World::applyRestart(const Restart& restart)
+{
+    restart_ = restart;
+    pending_.reset();
+    restartSince_ = tick_;
+    indirectTaker_ = kNoPlayer;
+    setpiece::arrange(players_.data(), kPlayerCount, *restart_);
+    ball_.position = {restart.spot.x, restart.spot.y, physics::ball::kRadius};
+    ball_.velocity = {};
+    ball_.spin = {};
+    possessor_ = kNoPlayer;
+    ballDead_ = false;
+}
+
+void World::sendOff(Player& player)
+{
+    constexpr float touchlineGap = 6.0f;
+    const float y = physics::pitch::kHalfWidth + touchlineGap;
+    player.sentOff = true;
+    player.position = {-physics::pitch::kHalfLength + 2.0f * static_cast<float>(player.id % kPlayersPerSide), player.side == Side::Home ? -y : y};
+    player.velocity = {};
+    if (possessor_ == player.id) {
+        possessor_ = kNoPlayer;
+    }
+}
+
+bool World::barredByRestart(const Player& player) const
+{
+    return restart_ && player.side != restart_->side;
 }
 
 void World::attachBall(const Player& carrier)
@@ -262,14 +356,15 @@ void World::resolveActions(const PlayerActions& requests)
     }
 }
 
-void World::kick(std::size_t index, const ActionRequest& request)
+void World::kick(std::size_t index, const ActionRequest& rawRequest)
 {
     Player& p = players_[index];
     const bool inReach = physics::distance(p.position, physics::xy(ball_.position)) <= tune::kKickReach && ball_.position.z <= tune::kKickHeight;
-    if (p.cooldown > 0 || !inReach) {
+    if (p.cooldown > 0 || !inReach || barredByRestart(p)) {
         return;
     }
 
+    const ActionRequest request = restart_ ? setpiece::shapeRequest(*restart_, rawRequest) : rawRequest;
     const float pressure = pressureOn(p, players_.data(), players_.size());
     const bool hasTarget = request.target < kPlayerCount;
     Kick result;
@@ -305,6 +400,11 @@ void World::kick(std::size_t index, const ActionRequest& request)
         return;
     }
 
+    if (restart_) {
+        setpiece::shapeKick(*restart_, result, ball_.position);
+        offsideExempt_ = setpiece::exemptFromOffside(restart_->kind);
+        indirectTaker_ = setpiece::scoresIndirectly(restart_->kind) ? p.id : kNoPlayer;
+    }
     event.other = hasTarget ? request.target : kNoPlayer;
     event.value = physics::length(result.velocity);
     ball_.velocity = result.velocity;
@@ -364,7 +464,7 @@ void World::resolveLooseBall()
     if (ball_.position.z <= tune::kControlHeight) {
         for (const Player& p : players_) {
             const float d = physics::distance(p.position, ball);
-            if (p.cooldown > 0 || d > tune::kControlRadius) {
+            if (p.cooldown > 0 || d > tune::kControlRadius || barredByRestart(p)) {
                 continue;
             }
             const auto& a = p.profile.attributes;
@@ -379,7 +479,7 @@ void World::resolveLooseBall()
 
     if (winner == kNoPlayer) {
         for (Player& p : players_) {
-            if (p.cooldown == 0 && ball_.position.z <= tune::kDeflectHeight && physics::distance(p.position, ball) < tune::kBodyContactRadius) {
+            if (p.cooldown == 0 && !barredByRestart(p) && ball_.position.z <= tune::kDeflectHeight && physics::distance(p.position, ball) < tune::kBodyContactRadius) {
                 deflect(p);
             }
         }
@@ -446,7 +546,7 @@ void World::checkBallStatus()
 {
     const physics::BallStatus status = ball_.status();
     if (ballDead_) {
-        ballDead_ = status.status != physics::PlayStatus::InPlay;
+        ballDead_ = pending_ || status.status != physics::PlayStatus::InPlay;
         return;
     }
     if (status.status == physics::PlayStatus::InPlay) {
@@ -458,7 +558,7 @@ void World::checkBallStatus()
     MatchEvent event;
     event.player = lastToucher_;
     event.line = status.line;
-    if (status.status == physics::PlayStatus::Goal) {
+    if (status.status == physics::PlayStatus::Goal && indirectTaker_ == kNoPlayer) {
         event.kind = EventKind::Goal;
         event.side = status.scoredFor;
     } else {
@@ -480,6 +580,11 @@ std::uint64_t World::hash() const
     h = hashCombine(h, mix64(ballDead_ ? 1u : 0u));
     h = hashCombine(h, mix64(rng_.state()));
     h = hashCombine(h, keepers_.hash());
+    h = hashCombine(h, referee_.hash());
+    h = hashCombine(h, mix64(restart_ ? 1u + static_cast<std::uint64_t>(restart_->kind) + (static_cast<std::uint64_t>(restart_->taker) << 8) : 0u));
+    h = hashCombine(h, mix64(pending_ ? 1u + static_cast<std::uint64_t>(pending_->kind) + (pendingAt_ << 8) : 0u));
+    h = hashCombine(h, mix64(indirectTaker_));
+    h = hashCombine(h, mix64(restartSince_));
     for (const controls::ControlState& c : controls_) {
         for (const InputFrame::Button b : {InputFrame::Pass, InputFrame::Through, InputFrame::Shoot, InputFrame::Sprint, InputFrame::Tackle, InputFrame::Switch, InputFrame::Pause}) {
             h = hashCombine(h, mix64(static_cast<std::uint64_t>(c.heldTicks(b))));

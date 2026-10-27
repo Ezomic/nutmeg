@@ -441,7 +441,7 @@ TackleStats tackleMany(int tackling, int dribbling, int aggression)
         stats.fouls += find(world, EventKind::FoulCandidate) != nullptr ? 1 : 0;
         if (tackle->value > 0.0f) {
             REQUIRE(world.possessor() != kCarrier);
-        } else {
+        } else if (find(world, EventKind::FoulCandidate) == nullptr) {
             REQUIRE(world.possessor() == kCarrier);
         }
     }
@@ -604,7 +604,7 @@ TEST_CASE("a shot into the net emits a goal, and the ball going over the line em
             }
         }
         REQUIRE(goals <= 1);
-        REQUIRE(world.ballDead());
+        REQUIRE((world.ballDead() || world.restart().has_value()));
     }
     {
         World world(profiles(), 2);
@@ -699,7 +699,7 @@ TEST_CASE("replaying a recorded input stream gives identical hashes and events")
     REQUIRE(again.hashes == live.hashes);
     REQUIRE(again.events == live.events);
 
-    bool kinds[7] = {};
+    bool kinds[16] = {};
     for (const MatchEvent& e : live.events) {
         kinds[static_cast<int>(e.kind)] = true;
     }
