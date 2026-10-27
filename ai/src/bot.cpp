@@ -1,5 +1,7 @@
 #include "nutmeg/ai/bot.h"
 
+#include "nutmeg/ai/setpiece.h"
+
 #include <algorithm>
 
 namespace nutmeg::ai {
@@ -89,7 +91,16 @@ TeamIntent drive(const gameplay::World& world, Side side, Formation formation, M
     gameplay::PlayerInputs& inputs, gameplay::PlayerActions& actions, Decider& decider)
 {
     const TeamIntent intent = drive(world, side, formation, mentality, control, inputs);
-    const std::uint32_t chaser = looseBallChaser(world, side);
+    const std::optional<gameplay::Restart>& restart = world.restart();
+    if (restart && restart->side == side) {
+        positionForRestart(world, *restart, inputs);
+        if (restart->taker < gameplay::kPlayerCount) {
+            inputs[restart->taker] = {};
+            actions[restart->taker] = planRestart(world, *restart);
+        }
+        return intent;
+    }
+    const std::uint32_t chaser = restart ? gameplay::kNoPlayer : looseBallChaser(world, side);
     if (chaser != gameplay::kNoPlayer) {
         inputs[chaser] = moveToward(world.players()[chaser], {physics::xy(world.ball().position), tuning::kPressUrgency});
     }

@@ -49,9 +49,17 @@ public:
     // True from the tick the ball goes out or into the goal until it is back in play.
     bool ballDead() const { return ballDead_; }
     const Referee& referee() const { return referee_; }
-    // The free kick or penalty awaiting its taker. The ball is held on the
-    // spot, and only the taking side may kick it, until it is kicked.
+    // The restart awaiting its taker: kickoff, throw-in, goal kick, corner,
+    // free kick or penalty. The ball is held on the spot, and only the taking
+    // side may kick it, until it is kicked. `taker` is the player stood at it.
     const std::optional<Restart>& restart() const { return restart_; }
+    // The restart that will be set up once the ball has been dead long enough.
+    std::uint64_t restartSince() const { return restartSince_; }
+    const std::optional<Restart>& pendingRestart() const { return pending_; }
+    // Restarts play with a kickoff for `side`, as at the start of a match.
+    void kickoff(physics::Side side);
+    // Stops play and sets up `restart` at once.
+    void restartPlay(Restart restart);
     // What happened in the most recent step.
     const std::vector<MatchEvent>& events() const { return events_; }
     std::uint64_t hash() const;
@@ -68,6 +76,7 @@ private:
     void emit(MatchEvent event);
     void review();
     void applyRestart(const Restart& restart);
+    void scheduleRestart();
     void sendOff(Player& player);
     bool barredByRestart(const Player& player) const;
 
@@ -77,6 +86,11 @@ private:
     Rng rng_;
     Referee referee_;
     std::optional<Restart> restart_;
+    std::optional<Restart> pending_;
+    std::uint64_t pendingAt_ = 0;
+    std::uint64_t restartSince_ = 0;
+    std::uint32_t indirectTaker_ = kNoPlayer;
+    bool offsideExempt_ = false;
     std::array<controls::ControlState, kPlayerCount> controls_;
     std::uint32_t possessor_ = kNoPlayer;
     std::uint32_t lastToucher_ = kNoPlayer;

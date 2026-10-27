@@ -12,13 +12,15 @@
 
 namespace nutmeg::gameplay {
 
-enum class RestartKind : std::uint8_t { DirectFreeKick, IndirectFreeKick, Penalty };
+enum class RestartKind : std::uint8_t { DirectFreeKick, IndirectFreeKick, Penalty, Kickoff, ThrowIn, GoalKick, Corner };
 
-// Where and by whom play restarts after a stoppage. `side` is the team that takes it.
+// Where and by whom play restarts after a stoppage. `side` is the team that
+// takes it; `taker` is the player stood at the ball, set when the restart is applied.
 struct Restart {
     RestartKind kind = RestartKind::DirectFreeKick;
     physics::Side side = physics::Side::Home;
     physics::Vec2 spot;
+    std::uint32_t taker = kNoPlayer;
 
     bool operator==(const Restart&) const = default;
 };
@@ -47,6 +49,8 @@ struct Situation {
     std::size_t count = 0;
     std::uint32_t possessor = kNoPlayer;
     std::uint64_t tick = 0;
+    // The ball was kicked from a restart that cannot be offside.
+    bool offsideExempt = false;
 };
 
 class Referee {

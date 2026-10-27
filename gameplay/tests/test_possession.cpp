@@ -604,7 +604,7 @@ TEST_CASE("a shot into the net emits a goal, and the ball going over the line em
             }
         }
         REQUIRE(goals <= 1);
-        REQUIRE(world.ballDead());
+        REQUIRE((world.ballDead() || world.restart().has_value()));
     }
     {
         World world(profiles(), 2);
