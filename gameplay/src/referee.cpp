@@ -150,7 +150,7 @@ std::optional<Restart> Referee::onFoul(const MatchEvent& event, const Situation&
 void Referee::markPlayed(const MatchEvent& event, const Situation& situation)
 {
     clearPlayed();
-    if (event.player >= situation.count) {
+    if (event.player >= situation.count || situation.offsideExempt) {
         return;
     }
     const Player& kicker = situation.players[event.player];
