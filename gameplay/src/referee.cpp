@@ -256,6 +256,12 @@ void Referee::clearPlayed()
     std::fill(offsideAtPlay_.begin(), offsideAtPlay_.end(), std::uint8_t{0});
 }
 
+void Referee::exchange(std::uint32_t a, std::uint32_t b)
+{
+    std::swap(yellows_[a], yellows_[b]);
+    std::swap(sentOff_[a], sentOff_[b]);
+}
+
 std::uint64_t Referee::hash() const
 {
     std::uint64_t h = mix64(rng_.state());

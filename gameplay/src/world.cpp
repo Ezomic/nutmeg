@@ -165,13 +165,24 @@ World::World(const std::array<schema::PlayerProfile, kPlayerCount>& profiles, st
 {
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
-        const bool home = i < kPlayersPerSide;
-        const Vec2 slot = kFormation[i % kPlayersPerSide];
         p.id = static_cast<std::uint32_t>(i);
-        p.side = home ? Side::Home : Side::Away;
-        p.position = home ? slot : Vec2{-slot.x, -slot.y};
-        p.facing = home ? 0.0f : dmath::kPi;
+        p.side = i < kPlayersPerSide ? Side::Home : Side::Away;
         p.profile = profiles[i];
+    }
+    resetShape();
+}
+
+void World::resetShape()
+{
+    for (Player& p : players_) {
+        if (p.sentOff) {
+            continue;
+        }
+        const bool home = p.side == Side::Home;
+        const Vec2 slot = kFormation[p.id % kPlayersPerSide];
+        p.position = home ? slot : Vec2{-slot.x, -slot.y};
+        p.velocity = {};
+        p.facing = home ? 0.0f : dmath::kPi;
     }
 }
 
@@ -308,6 +319,9 @@ void World::applyRestart(const Restart& restart)
     pending_.reset();
     restartSince_ = tick_;
     indirectTaker_ = kNoPlayer;
+    if (restart.kind == RestartKind::Kickoff) {
+        resetShape();
+    }
     setpiece::arrange(players_.data(), kPlayerCount, *restart_);
     ball_.position = {restart.spot.x, restart.spot.y, physics::ball::kRadius};
     ball_.velocity = {};
