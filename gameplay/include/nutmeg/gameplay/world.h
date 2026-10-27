@@ -5,6 +5,7 @@
 #include "nutmeg/core/rng.h"
 #include "nutmeg/gameplay/actions.h"
 #include "nutmeg/gameplay/events.h"
+#include "nutmeg/gameplay/keeper.h"
 #include "nutmeg/gameplay/player.h"
 #include "nutmeg/gameplay/referee.h"
 #include "nutmeg/physics/ball.h"
@@ -19,6 +20,8 @@ namespace nutmeg::gameplay {
 
 inline constexpr std::size_t kPlayersPerSide = 11;
 inline constexpr std::size_t kPlayerCount = 2 * kPlayersPerSide;
+
+static_assert(kKeeperPlayerCount == kPlayerCount);
 
 using PlayerInputs = std::array<InputFrame, kPlayerCount>;
 using PlayerActions = std::array<ActionRequest, kPlayerCount>;
@@ -74,6 +77,7 @@ private:
     void deflect(Player& player);
     void checkBallStatus();
     void emit(MatchEvent event);
+    KeeperSituation keeperSituation();
     void review();
     void applyRestart(const Restart& restart);
     void scheduleRestart();
@@ -96,6 +100,7 @@ private:
     std::uint32_t lastToucher_ = kNoPlayer;
     bool ballDead_ = false;
     std::vector<MatchEvent> events_;
+    Keepers keepers_;
 };
 
 }

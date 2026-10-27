@@ -146,6 +146,9 @@ TEST_CASE("only the controlled player moves under a human input")
     };
     runSimulation(platform, sim, options);
     for (std::size_t i = 0; i < gameplay::kPlayerCount; ++i) {
+        if (i % gameplay::kPlayersPerSide == 0) {
+            continue;
+        }
         const bool moved = sim.world().players()[i].position != before.players()[i].position;
         REQUIRE(moved == (i == Simulation::kControlledPlayer));
     }

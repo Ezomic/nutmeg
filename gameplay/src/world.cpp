@@ -161,6 +161,7 @@ World::World(std::uint64_t seed)
 World::World(const std::array<schema::PlayerProfile, kPlayerCount>& profiles, std::uint64_t seed)
     : rng_(Rng(seed).derive("possession"))
     , referee_(Rng(seed).derive("referee"), kPlayerCount)
+    , keepers_(Rng(seed).derive("keeper"))
 {
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
@@ -184,6 +185,7 @@ void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
     events_.clear();
     PlayerActions requests;
     collectRequests(inputs, actions, requests);
+    keepers_.plan(keeperSituation(), inputs, requests);
 
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
@@ -193,8 +195,9 @@ void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
         if (p.cooldown > 0) {
             --p.cooldown;
         }
-        const bool sprint = (inputs[i].buttons & InputFrame::Sprint) != 0;
-        locomotion::step(p, intentOf(inputs[i], p.side), sprint);
+        const KeeperDrive* keeperDrive = keepers_.drive(i);
+        const bool sprint = keeperDrive ? keeperDrive->sprint : (inputs[i].buttons & InputFrame::Sprint) != 0;
+        locomotion::step(p, keeperDrive ? keeperDrive->intent : intentOf(inputs[i], p.side), sprint);
     }
     separate(players_);
     for (Player& p : players_) {
@@ -220,6 +223,7 @@ void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
             resolveLooseBall();
         }
     }
+    keepers_.resolve(keeperSituation());
     if (restart_ && physics::length(ball_.velocity) > 0.0f) {
         restart_.reset();
     }
@@ -254,6 +258,11 @@ void World::emit(MatchEvent event)
         indirectTaker_ = kNoPlayer;
     }
     events_.push_back(event);
+}
+
+KeeperSituation World::keeperSituation()
+{
+    return {players_, ball_, possessor_, lastToucher_, ballDead_, tick_, events_};
 }
 
 void World::review()
@@ -413,7 +422,7 @@ void World::tackle(std::size_t index)
         return;
     }
     Player& carrier = players_[possessor_];
-    if (carrier.side == tackler.side || physics::distance(tackler.position, carrier.position) > tune::kTackleReach) {
+    if (keepers_.protects(carrier) || carrier.side == tackler.side || physics::distance(tackler.position, carrier.position) > tune::kTackleReach) {
         return;
     }
 
@@ -570,6 +579,7 @@ std::uint64_t World::hash() const
     h = hashCombine(h, mix64(lastToucher_));
     h = hashCombine(h, mix64(ballDead_ ? 1u : 0u));
     h = hashCombine(h, mix64(rng_.state()));
+    h = hashCombine(h, keepers_.hash());
     h = hashCombine(h, referee_.hash());
     h = hashCombine(h, mix64(restart_ ? 1u + static_cast<std::uint64_t>(restart_->kind) + (static_cast<std::uint64_t>(restart_->taker) << 8) : 0u));
     h = hashCombine(h, mix64(pending_ ? 1u + static_cast<std::uint64_t>(pending_->kind) + (pendingAt_ << 8) : 0u));
