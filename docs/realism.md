@@ -193,6 +193,7 @@ PHP counted every frame it emitted, including dead balls and set pieces. The run
 | `shots_per_match` | count of `shot` plus `header` events |
 | `shots_on_target_per_match` | `shot`/`header` with `shot_outcome` in `goal`, `saved` |
 | `shot_conversion_pct` | `goal` over `shot` plus `header`, pooled |
+| `save_pct` | `shot`/`header` with `shot_outcome` `saved`, over those with `goal` or `saved`, pooled. Derived from the shots on target and goals bands: about 70 percent. Checked by `gameplay/tests/test_keeper.cpp` |
 | `pass_completion_pct` | `pass` events with `success`, over all `pass` events, pooled |
 | `crosses_per_match` | count of `cross` events |
 | `fouls_per_match` | count of `foul` events |

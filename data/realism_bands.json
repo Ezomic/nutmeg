@@ -86,6 +86,23 @@
       ]
     },
     {
+      "id": "save_pct",
+      "label": "Save %",
+      "scope": "match",
+      "definition": "Shots saved by the keeper divided by shots on target (goals plus saves), over the whole batch, as a percentage.",
+      "low": 65.0,
+      "high": 78.0,
+      "unit": "percent",
+      "known_off": false,
+      "php_known_off": false,
+      "php_last_measured": null,
+      "band_origin": "derived",
+      "aggregation": "pooled",
+      "needs": [
+        "shot.outcome"
+      ]
+    },
+    {
       "id": "pass_completion_pct",
       "label": "Pass completion %",
       "scope": "match",

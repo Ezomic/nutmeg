@@ -159,6 +159,7 @@ World::World(std::uint64_t seed)
 
 World::World(const std::array<schema::PlayerProfile, kPlayerCount>& profiles, std::uint64_t seed)
     : rng_(Rng(seed).derive("possession"))
+    , keepers_(Rng(seed).derive("keeper"))
 {
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
@@ -182,14 +183,16 @@ void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
     events_.clear();
     PlayerActions requests;
     collectRequests(inputs, actions, requests);
+    keepers_.plan(keeperSituation(), inputs, requests);
 
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
         if (p.cooldown > 0) {
             --p.cooldown;
         }
-        const bool sprint = (inputs[i].buttons & InputFrame::Sprint) != 0;
-        locomotion::step(p, intentOf(inputs[i], p.side), sprint);
+        const KeeperDrive* keeperDrive = keepers_.drive(i);
+        const bool sprint = keeperDrive ? keeperDrive->sprint : (inputs[i].buttons & InputFrame::Sprint) != 0;
+        locomotion::step(p, keeperDrive ? keeperDrive->intent : intentOf(inputs[i], p.side), sprint);
     }
     separate(players_);
     for (Player& p : players_) {
@@ -205,6 +208,7 @@ void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
             resolveLooseBall();
         }
     }
+    keepers_.resolve(keeperSituation());
     ball_.step();
     checkBallStatus();
     ++tick_;
@@ -228,6 +232,11 @@ void World::emit(MatchEvent event)
 {
     event.tick = tick_;
     events_.push_back(event);
+}
+
+KeeperSituation World::keeperSituation()
+{
+    return {players_, ball_, possessor_, lastToucher_, ballDead_, tick_, events_};
 }
 
 void World::attachBall(const Player& carrier)
@@ -313,7 +322,7 @@ void World::tackle(std::size_t index)
         return;
     }
     Player& carrier = players_[possessor_];
-    if (carrier.side == tackler.side || physics::distance(tackler.position, carrier.position) > tune::kTackleReach) {
+    if (keepers_.protects(carrier) || carrier.side == tackler.side || physics::distance(tackler.position, carrier.position) > tune::kTackleReach) {
         return;
     }
 
@@ -470,6 +479,7 @@ std::uint64_t World::hash() const
     h = hashCombine(h, mix64(lastToucher_));
     h = hashCombine(h, mix64(ballDead_ ? 1u : 0u));
     h = hashCombine(h, mix64(rng_.state()));
+    h = hashCombine(h, keepers_.hash());
     for (const controls::ControlState& c : controls_) {
         for (const InputFrame::Button b : {InputFrame::Pass, InputFrame::Through, InputFrame::Shoot, InputFrame::Sprint, InputFrame::Tackle, InputFrame::Switch, InputFrame::Pause}) {
             h = hashCombine(h, mix64(static_cast<std::uint64_t>(c.heldTicks(b))));
