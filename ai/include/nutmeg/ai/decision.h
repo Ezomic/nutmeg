@@ -1,5 +1,7 @@
 #pragma once
 
+#include "nutmeg/ai/utility_tuning.h"
+#include "nutmeg/core/rng.h"
 #include "nutmeg/gameplay/actions.h"
 #include "nutmeg/gameplay/world.h"
 #include "nutmeg/physics/pitch.h"
@@ -45,9 +47,20 @@ struct Decision {
     const Candidate& best() const { return candidates[chosen]; }
 };
 
+// How a team's difficulty and mentality bend the carrier's decision. The
+// defaults are the unbent utility model.
+struct DecisionStyle {
+    // Multiplies every risk term: above 1 the carrier plays safer.
+    float riskAversion = utility::tuning::kRiskAversion;
+    // Half-width of the uniform jitter added to each candidate's utility.
+    float noise = 0.0f;
+    // Extra ticks before the first decision and between decisions.
+    int reactionTicks = 0;
+};
+
 // Scores every option for the carrier at index `carrier` and picks the best.
 // A pure function of the world: no randomness, no state.
-Decision evaluate(const gameplay::World& world, std::size_t carrier);
+Decision evaluate(const gameplay::World& world, std::size_t carrier, float riskAversion = utility::tuning::kRiskAversion);
 
 // Threat of standing with the ball at `point` for a team attacking `side`'s goal.
 float threatAt(physics::Side attacking, physics::Vec2 point);
@@ -79,12 +92,23 @@ class Decider {
 public:
     static constexpr std::size_t kLogCapacity = 256;
 
+    Decider() = default;
+    Decider(const DecisionStyle& style, std::uint64_t seed)
+        : style_(style)
+        , rng_(seed)
+    {
+    }
+
     CarrierPlan plan(const gameplay::World& world, physics::Side side);
+
+    const DecisionStyle& style() const { return style_; }
 
     const std::deque<Decision>& log() const { return log_; }
     const DecisionStats& stats() const { return stats_; }
 
 private:
+    DecisionStyle style_;
+    Rng rng_{0};
     std::uint32_t carrier_ = gameplay::kNoPlayer;
     std::uint64_t nextTick_ = 0;
     bool steering_ = false;

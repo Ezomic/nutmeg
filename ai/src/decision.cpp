@@ -298,7 +298,7 @@ float shotChance(const gameplay::World& world, const Player& shooter)
     return shotChanceFor(contextFor(world, shooter));
 }
 
-Decision evaluate(const gameplay::World& world, std::size_t carrier)
+Decision evaluate(const gameplay::World& world, std::size_t carrier, float riskAversion)
 {
     const Context c = contextFor(world, world.players()[carrier]);
 
@@ -310,6 +310,14 @@ Decision evaluate(const gameplay::World& world, std::size_t carrier)
     addPassing(c, decision.candidates);
     addCrosses(c, decision.candidates);
     decision.candidates.push_back(holdCandidate(c));
+
+    if (riskAversion != tune::kRiskAversion) {
+        const float rescale = riskAversion / tune::kRiskAversion;
+        for (Candidate& cand : decision.candidates) {
+            cand.risk *= rescale;
+            cand.utility = cand.gain - cand.risk;
+        }
+    }
 
     for (std::size_t i = 1; i < decision.candidates.size(); ++i) {
         if (decision.candidates[i].utility > decision.candidates[decision.chosen].utility) {
@@ -352,16 +360,26 @@ CarrierPlan Decider::plan(const gameplay::World& world, Side side)
     const Player& player = world.players()[holder];
     if (holder != carrier_) {
         carrier_ = holder;
-        nextTick_ = world.tick() + tune::kFirstDecisionDelay;
+        nextTick_ = world.tick() + tune::kFirstDecisionDelay + style_.reactionTicks;
         steering_ = false;
     }
     plan.player = holder;
 
     if (world.tick() >= nextTick_ && player.cooldown == 0) {
-        Decision decision = evaluate(world, holder);
+        Decision decision = evaluate(world, holder, style_.riskAversion);
+        if (style_.noise > 0.0f) {
+            float bestScore = 0.0f;
+            for (std::size_t i = 0; i < decision.candidates.size(); ++i) {
+                const float score = decision.candidates[i].utility + (rng_.nextFloat() * 2.0f - 1.0f) * style_.noise;
+                if (i == 0 || score > bestScore) {
+                    bestScore = score;
+                    decision.chosen = i;
+                }
+            }
+        }
         const Candidate& best = decision.best();
         const int saving = static_cast<int>(tune::kDecisionVisionSaving * gameplay::skill(player.profile.attributes.vision));
-        nextTick_ = world.tick() + static_cast<std::uint64_t>(tune::kDecisionInterval - saving);
+        nextTick_ = world.tick() + static_cast<std::uint64_t>(tune::kDecisionInterval - saving + style_.reactionTicks);
         steering_ = best.kind == CandidateKind::Dribble || best.kind == CandidateKind::Hold;
         destination_ = best.destination;
         plan.request = best.request;
