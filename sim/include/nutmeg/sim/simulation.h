@@ -28,6 +28,7 @@ public:
     static constexpr std::size_t kControlledPlayer = 10;
 
     const gameplay::World& world() const { return world_; }
+    gameplay::World& world() { return world_; }
     const gameplay::Lifecycle& lifecycle() const { return lifecycle_; }
     std::uint64_t stateHash() const;
 
