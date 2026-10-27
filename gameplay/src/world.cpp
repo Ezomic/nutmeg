@@ -159,6 +159,7 @@ World::World(std::uint64_t seed)
 
 World::World(const std::array<schema::PlayerProfile, kPlayerCount>& profiles, std::uint64_t seed)
     : rng_(Rng(seed).derive("possession"))
+    , referee_(Rng(seed).derive("referee"), kPlayerCount)
 {
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
@@ -185,6 +186,9 @@ void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
 
     for (std::size_t i = 0; i < kPlayerCount; ++i) {
         Player& p = players_[i];
+        if (p.sentOff) {
+            continue;
+        }
         if (p.cooldown > 0) {
             --p.cooldown;
         }
@@ -193,20 +197,31 @@ void World::step(const PlayerInputs& inputs, const PlayerActions& actions)
     }
     separate(players_);
     for (Player& p : players_) {
-        clampToPitch(p);
+        if (!p.sentOff) {
+            clampToPitch(p);
+        }
     }
 
     if (possessor_ != kNoPlayer) {
         attachBall(players_[possessor_]);
     }
+    if (restart_) {
+        ball_.position = {restart_->spot.x, restart_->spot.y, physics::ball::kRadius};
+        ball_.velocity = {};
+        ball_.spin = {};
+    }
     if (!ballDead_) {
         resolveActions(requests);
-        if (possessor_ == kNoPlayer) {
+        if (possessor_ == kNoPlayer && !restart_) {
             resolveLooseBall();
         }
     }
+    if (restart_ && physics::length(ball_.velocity) > 0.0f) {
+        restart_.reset();
+    }
     ball_.step();
     checkBallStatus();
+    review();
     ++tick_;
 }
 
@@ -228,6 +243,47 @@ void World::emit(MatchEvent event)
 {
     event.tick = tick_;
     events_.push_back(event);
+}
+
+void World::review()
+{
+    const Situation situation{players_.data(), kPlayerCount, possessor_, tick_};
+    const std::optional<Restart> restart = referee_.review(situation, events_);
+    for (const MatchEvent& event : events_) {
+        if (event.kind == EventKind::RedCard) {
+            sendOff(players_[event.player]);
+        }
+    }
+    if (restart) {
+        applyRestart(*restart);
+    }
+}
+
+void World::applyRestart(const Restart& restart)
+{
+    restart_ = restart;
+    ball_.position = {restart.spot.x, restart.spot.y, physics::ball::kRadius};
+    ball_.velocity = {};
+    ball_.spin = {};
+    possessor_ = kNoPlayer;
+    ballDead_ = false;
+}
+
+void World::sendOff(Player& player)
+{
+    constexpr float touchlineGap = 6.0f;
+    const float y = physics::pitch::kHalfWidth + touchlineGap;
+    player.sentOff = true;
+    player.position = {-physics::pitch::kHalfLength + 2.0f * static_cast<float>(player.id % kPlayersPerSide), player.side == Side::Home ? -y : y};
+    player.velocity = {};
+    if (possessor_ == player.id) {
+        possessor_ = kNoPlayer;
+    }
+}
+
+bool World::barredByRestart(const Player& player) const
+{
+    return restart_ && player.side != restart_->side;
 }
 
 void World::attachBall(const Player& carrier)
@@ -257,7 +313,7 @@ void World::kick(std::size_t index, const ActionRequest& request)
 {
     Player& p = players_[index];
     const bool inReach = physics::distance(p.position, physics::xy(ball_.position)) <= tune::kKickReach && ball_.position.z <= tune::kKickHeight;
-    if (p.cooldown > 0 || !inReach) {
+    if (p.cooldown > 0 || !inReach || barredByRestart(p)) {
         return;
     }
 
@@ -355,7 +411,7 @@ void World::resolveLooseBall()
     if (ball_.position.z <= tune::kControlHeight) {
         for (const Player& p : players_) {
             const float d = physics::distance(p.position, ball);
-            if (p.cooldown > 0 || d > tune::kControlRadius) {
+            if (p.cooldown > 0 || d > tune::kControlRadius || barredByRestart(p)) {
                 continue;
             }
             const auto& a = p.profile.attributes;
@@ -370,7 +426,7 @@ void World::resolveLooseBall()
 
     if (winner == kNoPlayer) {
         for (Player& p : players_) {
-            if (p.cooldown == 0 && ball_.position.z <= tune::kDeflectHeight && physics::distance(p.position, ball) < tune::kBodyContactRadius) {
+            if (p.cooldown == 0 && !barredByRestart(p) && ball_.position.z <= tune::kDeflectHeight && physics::distance(p.position, ball) < tune::kBodyContactRadius) {
                 deflect(p);
             }
         }
@@ -470,6 +526,8 @@ std::uint64_t World::hash() const
     h = hashCombine(h, mix64(lastToucher_));
     h = hashCombine(h, mix64(ballDead_ ? 1u : 0u));
     h = hashCombine(h, mix64(rng_.state()));
+    h = hashCombine(h, referee_.hash());
+    h = hashCombine(h, mix64(restart_ ? 1u + static_cast<std::uint64_t>(restart_->kind) : 0u));
     for (const controls::ControlState& c : controls_) {
         for (const InputFrame::Button b : {InputFrame::Pass, InputFrame::Through, InputFrame::Shoot, InputFrame::Sprint, InputFrame::Tackle, InputFrame::Switch, InputFrame::Pause}) {
             h = hashCombine(h, mix64(static_cast<std::uint64_t>(c.heldTicks(b))));

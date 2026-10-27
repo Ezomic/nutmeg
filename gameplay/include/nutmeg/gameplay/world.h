@@ -6,11 +6,13 @@
 #include "nutmeg/gameplay/actions.h"
 #include "nutmeg/gameplay/events.h"
 #include "nutmeg/gameplay/player.h"
+#include "nutmeg/gameplay/referee.h"
 #include "nutmeg/physics/ball.h"
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace nutmeg::gameplay {
@@ -46,6 +48,10 @@ public:
     std::uint32_t lastToucher() const { return lastToucher_; }
     // True from the tick the ball goes out or into the goal until it is back in play.
     bool ballDead() const { return ballDead_; }
+    const Referee& referee() const { return referee_; }
+    // The free kick or penalty awaiting its taker. The ball is held on the
+    // spot, and only the taking side may kick it, until it is kicked.
+    const std::optional<Restart>& restart() const { return restart_; }
     // What happened in the most recent step.
     const std::vector<MatchEvent>& events() const { return events_; }
     std::uint64_t hash() const;
@@ -60,11 +66,17 @@ private:
     void deflect(Player& player);
     void checkBallStatus();
     void emit(MatchEvent event);
+    void review();
+    void applyRestart(const Restart& restart);
+    void sendOff(Player& player);
+    bool barredByRestart(const Player& player) const;
 
     std::array<Player, kPlayerCount> players_;
     physics::Ball ball_;
     std::uint64_t tick_ = 0;
     Rng rng_;
+    Referee referee_;
+    std::optional<Restart> restart_;
     std::array<controls::ControlState, kPlayerCount> controls_;
     std::uint32_t possessor_ = kNoPlayer;
     std::uint32_t lastToucher_ = kNoPlayer;
