@@ -122,7 +122,7 @@ TeamIntent planTeam(const TeamInput& in)
     const Vec2 pressPoint = insidePitch(towardsOwnGoal(ball, tuning::kPressStandOff));
     for (std::size_t n = 0; n < pressers; ++n) {
         const std::size_t i = nearestTo(ball, positions, pressing);
-        const float range = n == 0 ? tuning::kPressRange : tuning::kSecondPresserRange;
+        const float range = (n == 0 ? tuning::kPressRange : tuning::kSecondPresserRange) * in.pressScale;
         if (i == kOutfielders || physics::distance(positions[i], ball) > range) {
             break;
         }
