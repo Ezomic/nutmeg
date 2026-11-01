@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Package a built nutmeg-run for download. Run bin/build linux first.
+#
+#   bin/package [build-dir]
+#
+# Checks that the binary reproduces runner/tests/data/expected_result.json byte for byte,
+# then writes dist/nutmeg-run-<engine version>-linux-x86_64.tar.gz with the binary and
+# runner/schema/*.json. Prints the archive path on the last line.
+set -eu
+
+repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo"
+
+build=${1:-build/linux}
+bin="$build/runner/nutmeg-run"
+[ -x "$bin" ] || { echo "package: $bin not found, run bin/build linux first" >&2; exit 1; }
+
+version=$("$bin" --version | awk '{print $3}')
+[ -n "$version" ] || { echo "package: could not read the engine version" >&2; exit 1; }
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+"$bin" runner/tests/data/valid_match.json -o "$work/result.json"
+cmp "$work/result.json" runner/tests/data/expected_result.json \
+  || { echo "package: output differs from expected_result.json" >&2; exit 1; }
+
+name="nutmeg-run-$version-linux-x86_64"
+stage="$work/$name"
+mkdir -p "$stage/schema" dist
+cp "$bin" "$stage/nutmeg-run"
+cp runner/schema/*.json "$stage/schema/"
+strip "$stage/nutmeg-run"
+
+tar -C "$work" -czf "dist/$name.tar.gz" "$name"
+echo "dist/$name.tar.gz"
